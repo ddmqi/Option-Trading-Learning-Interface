@@ -1,0 +1,3815 @@
+import tkinter as tk        #   Interface Graphique
+from tkinter import Menu, Menubutton, IntVar, messagebox, CENTER, ttk
+from math import log, sqrt, exp
+import numpy as np
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import yfinance as yf
+import time
+import random
+from scipy.stats import norm
+import matplotlib.pyplot as plt
+
+
+
+
+
+
+
+#   FONCTION 1 : POUR AFFICHER UN TEXTE QUI VA AIDER L'UTILISATEUR DANS SES CHOIX
+
+def Texte_aide(self, Texte) :
+    
+    #   A.  CRÉATION D'UNE NOUVELLE FENÊTRE POUR AFFICHER LE TEXTE
+    objectif_fenetre = tk.Toplevel(self)
+    objectif_fenetre.title("Objectif du Projet")
+    objectif_fenetre.geometry("750x500+400+0")
+
+
+    #   B.  CRÉATION D'UN BLOC DANS LA NOUVELLE FENÊTRE, POUR AFFICHER LE TEXTE
+
+    texte_objectif = tk.Text(objectif_fenetre, wrap="word")
+    texte_objectif.pack(expand=True, fill=tk.BOTH, padx=10, pady=10)
+
+    texte_a_afficher = Texte    #   "Texte" --> VARIABLE QUI VA RENVOYER AU TEXTE À AFFICHER
+    
+    #   C.  INSERTION DU TEXTE DANS LE NOUVEAU BLOC
+    texte_objectif.insert(tk.END, texte_a_afficher)
+    
+    #   D.  J'EMPÊCHE QUE L'UTILISATEUR PUISSE MODIFIER LE TEXTE
+    texte_objectif.config(state=tk.DISABLED)
+
+    #   E.  BOUTON POUR FERMER LA PAGE
+    bouton_fermer = tk.Button(objectif_fenetre, text="Fermer", command=objectif_fenetre.destroy)
+    bouton_fermer.pack(pady=10)
+
+
+
+
+
+
+
+# CRÉATION DE LA CLASSE PRINCIPALE
+
+class Root(tk.Tk):
+    def __init__(self):
+        super().__init__()
+        self.title("Connexion")
+        self.geometry("400x400+0+0") #  Mise en place de la taille de la fenêtre
+        self.resizable(height=False, width=False) # Je ne veux pas qu'on puisse modifier la taille et l'emplacement de la fenêtre
+
+
+        #   Appel de la fonction qui remplis toute ma page de connexion
+        self.setup_widgets_connexion()
+
+
+
+
+    #   I.  FONCTION DE REMPLISSAGE DES ÉLÉMENTS DE MA PAGE DE CONNEXION (setup_widgets_connexion)
+
+    def setup_widgets_connexion(self):
+        
+
+        #   A.  Texte de message de remplissage du formulaire de connexion
+        self.label = tk.Label(self, text="Veuillez remplir le formulaire de connexion :",font=("Verdana", 12))
+        self.label.place(relx=0.5, rely=0.1, anchor=tk.CENTER)  #   Position RELATIVE du texte : relx = horizontal, rely = vertical
+
+
+
+        #   B.  Création du bloc (FRAME) qui hébergera : le bloc hebergera et organisera les différents textes, zones de textes et boutons de ma page principale
+        self.frame = tk.Frame(self, width=250, height=250, bg='#3a3a3a')
+        self.frame.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+
+
+        #   MISE EN PLACE DES WIDGETS DANS LA FRAME 
+        
+                    #   - Label = Afficher du texte
+                    #   - Entry = Saisir du texte (pour l'utilisateur)
+                    #   - Btn   = Bouton à cliquer (pour l'utilisateur)
+                    #   - Checkbutton = Bouton à cocher (pour l'utilisateur)
+
+
+                    #   - Insert = mise en place d'une valeur par défaut dans la zone de texte
+
+
+            #Dans la suite de la fonction, j'utiliserai la position absolue avec "x =..." et "y=..." ; cela facilitera la position dans le bloc "FRAME"
+
+
+        #   C. Texte d'IDENTIFICATION
+        self.label2 = tk.Label(self.frame, text='Identifiant', bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label2.place(x=10, y=30)
+        #   "ENTRY" --> Zone de texte pour l'IDENTIFIANT
+        self.entry = tk.Entry(self.frame, width=13)
+        self.entry.insert(0, "David")
+        self.entry.place(x=110, y=25)
+
+
+        #   D.  Texte de MOT DE PASSE
+        self.label3 = tk.Label(self.frame, text='Mot de Passe', bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label3.place(x=10, y=70)  # Positionnement absolu
+        #   "ENTRY" --> Zone de texte pour le MOT DE PASSE
+        self.entry2 = tk.Entry(self.frame, width=13, show="*")
+        self.entry2.insert(0, "David")
+        self.entry2.place(x=110, y=65)
+
+        #   E.  Bouton à cocher "JE SUIS HUMAIN"
+        self.est_humain_var = tk.BooleanVar()  # Cette variable stockera l'état du bouton à cocher (coché ou non)
+        self.est_humain_checkbutton = tk.Checkbutton(self.frame, text="Je suis humain", variable=self.est_humain_var, onvalue=True, offvalue=False, bg='#3a3a3a', fg='white', selectcolor="#3a3a3a",font=("Verdana", 12))
+        self.est_humain_checkbutton.place(x=100, y=110)
+
+        #   F.  Bouton VALIDER --> va récupérer les infos saisis
+        self.valider_btn = tk.Button(self.frame, text="Valider", command=self.recuperer_infos) #    Appel fonction Recuperer_infos
+        self.valider_btn.place(x=80, y=160)
+
+
+
+
+    #   II.  FONCTION DE RÉCUPÉRATION ET TRAITEMENT DES INFOS DE LA PAGE DE CONNEXION
+    def recuperer_infos(self):
+        identifiant = self.entry.get()                  #       Récupération --> Identifiant
+        mot_de_passe = self.entry2.get()                #       Récupération --> Mot de passe
+        est_humain_coche = self.est_humain_var.get()    #       Récupération --> Est humain
+
+        #   J'ai mis 3 identifiants et mots de passes pour se connecter
+        if identifiant == "David" and mot_de_passe == "David" and est_humain_coche:
+            messagebox.showinfo("Succès", "Bienvenue, David !")
+            PageApresConnexion(self)    #   Si tout est bon --> Ouverture de la Classe "PageApresConnexion"
+        elif identifiant == "Jules" and mot_de_passe == "Jules" and est_humain_coche:
+            messagebox.showinfo("Succès", "Bienvenue, Jules !")
+            PageApresConnexion(self)    #   Si tout est bon --> Ouverture de la Classe "PageApresConnexion"
+        elif identifiant == "Nicolet" and mot_de_passe == "Nicolet" and est_humain_coche:
+            messagebox.showinfo("Succès", "Bienvenue, Monsieur Nicolet !")
+            PageApresConnexion(self)    #   Si tout est bon --> Ouverture de la Classe "PageApresConnexion"
+        else:
+            if not est_humain_coche:
+                messagebox.showerror("Erreur", "Il faut cocher 'Je suis humain'")
+            else:
+                messagebox.showerror("Erreur", "L'identifiant ou le mot de passe n'est pas bon")
+
+
+
+    #   III.  FONCTION POUR NETTOYER LA PAGE
+    def clear_frame(self): 
+        for widget in self.winfo_children():
+            widget.destroy()
+
+
+
+    #   IV.  FONCTION POUR CHANGER DE TITRE
+    def changer_titre(self, nouveau_titre):
+        self.title(nouveau_titre)
+
+
+
+
+
+
+
+
+#   CRÉATION DE LA CLASSE (UNE FOIS CONNECTÉ)
+
+class PageApresConnexion(tk.Frame):
+    def __init__(self, parent):
+        super().__init__(parent)
+        self.parent = parent
+        self.clear_frame()
+        self.pack(expand=True, fill=tk.BOTH)
+        self.main_page()    #   Fonction qui permet de montrer le contenu de la page
+
+    
+
+    #   I.  FONCTION PAGE PRINCIPALE
+
+    def main_page(self) :
+        self.clear_frame()
+        self.parent.changer_titre("Page principale") 
+
+        self.label = tk.Label(self, text="Veuillez choisir le type d'option", font=("Verdana", 12))
+        self.label.pack(pady=20, anchor=tk.CENTER)
+        
+        button_vanille = tk.Button(self, text="Options Vanilles", command=self.show_vanilla_options)          #   "show_vanilla_options"  --> ouverture fonction des options vanilles
+        button_vanille.pack(fill=tk.X, padx=50, pady=20)
+
+        button_strategy=tk.Button(self, text="Stratégies sur Options", command=self.show_option_strategies)   #   "show_option_strategies"  --> ouverture fonction des Stratégies sur option
+        button_strategy.pack(fill=tk.X, padx=50, pady=20)
+
+        button_barriere=tk.Button(self, text="Options à Barrière", command=self.show_barrier_options)         #   "show_barrier_options"  --> ouverture fonction des Options à barrière
+        button_strategy.pack(fill=tk.X, padx=50, pady=20)
+        button_barriere.pack(fill=tk.X, padx=50, pady=20)
+
+
+
+
+        #   A.  MENU DÉROULANT EN BAS DE LA PAGE
+        menuBtn = Menubutton(self, text="Menu")
+        menuBtn.menu = Menu(menuBtn, tearoff=0)     #   "tearoff=0" --> supprime l'option détachable du menu
+        menuBtn["menu"] = menuBtn.menu
+        
+
+        v1 = IntVar()
+        v2 = IntVar()
+
+
+        menuBtn.menu.add_checkbutton(label="Objectif du projet", variable=v1, command=self.objectif_projet)     #   Ouverture page expliquant les objectifs du projet
+        menuBtn.menu.add_checkbutton(label="Fermer", variable=v2, command=self.quit)                            #   Fermeture de l'application
+        
+        menuBtn.pack(pady=20)
+
+    
+
+        #   B.  BOUTON D'AIDE (?) EN BAS À GAUCHE 
+        button_aide = tk.Button(self, text="?", command= self.Aide)
+        button_aide.pack(side = "left")
+    
+
+
+    #   II.  TEXTE --> OBJECTIF PROJET (MENU DÉROULANT)
+    def objectif_projet(self):
+        texte = """
+        Objectif du Projet:
+        -------------------
+        Ce projet à pour objectif de créer une interface de trading sur option 
+        pour les personnes qui souhaitent en apprendre davantage.
+        
+        Les débutants comme les professionnels peuvent y trouver leur compte.
+        
+        Nous nous intéresserons :
+            1) Aux options Vanilles : qui sont les options classiques, 
+                à savoir Call et Put. Cette section permettra de s'intéresser 
+                aux différents Payoffs (profils de gain/perte) de l'option en 
+                fonction des paramètres prédéfinis.
+
+            2) Les Différentes Stratégies sur option : Les vendeurs d'options 
+                ont un profil défavorable comparé aux acheteurs. Pour pallier 
+                à ce désavantage, les émetteurs utilisent des stratégies de 
+                couvertures (Hedging), et c'est ce que nous allons voir dans 
+                cette section.
+
+            3) Les options à barrière : les barrières sont des éléments 
+                prédominants dans les options, qui vont rajouter une incertitude 
+                sur le rendement futur de l'option.
+
+            BONNE UTILISATION DE L'INTERFACE :)
+        """
+        Texte_aide(self, texte)
+
+
+
+    #   III.  TEXTE -->   AIDE (BOUTON "?")
+    def Aide(self) :
+        texte = """
+        AIDE :
+        ------
+
+        Vous devez cliquer sur un des trois bouton afin de choisir une page.
+
+        pour plus d'information sur chacune des 3 parties : 
+        cliquez sur : Menu en bas de l'écran --> Objectif du projet.
+
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        Texte_aide(self, texte)
+
+
+
+
+
+    #   IV. FONCTION D'OUVERTURE DES FONCTIONS VANILLES
+    def show_vanilla_options(self):
+        self.create_vanille_page()  #   Renvoie à la page des options (juste en dessous)
+        self.parent.changer_titre("Options Vanilles")  
+
+
+
+
+    #   V.  FONCTION DE CRÉATION DE LA PAGE "OPTIONS VANILLES"
+    def create_vanille_page(self):
+        self.clear_frame()
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x')  #   "fill=x" --> pour étendre horizontalement
+        
+        #   A.1.    Bouton retour (placé dans le bloc du haut)
+        button_retour = tk.Button(self.frame_haut, text="Menu Principal", command=self.main_page)
+        button_retour.pack(side="left", padx=10, pady=10)
+
+
+        #   B.  Bloc en bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self)  
+        self.frame_bas.pack(side='top', fill='both', expand=True)   #    "fill=both" et 'expand=True' pour occuper l'espace restant
+        
+        #   B.1.    Texte --> Choisir le type d'option
+        Texte_Option = tk.Label(self.frame_bas, text="Choisir le type d'option :")
+        Texte_Option.pack(pady=10)
+
+        #   B.2.    Bouton --> Choix du Call (Option d'achat)
+        button_call = tk.Button(self.frame_bas, text="Call", command=lambda: self.show_calculation_frame('call'))
+        button_call.pack(fill=tk.X, padx=50, pady=5)
+        
+        #   B.3.    Bouton --> Choix du Put (Option de Vente)
+        button_put = tk.Button(self.frame_bas, text="Put", command=lambda: self.show_calculation_frame('put'))
+        button_put.pack(fill=tk.X, padx=50, pady=5)
+
+        
+        #   C.  Bouton d'aide (?) en bas à gauche
+        button_Aide_Vanille_Option = tk.Button(self, text="?", command= self.Aide_Vanille_Option)
+        button_Aide_Vanille_Option.pack(side = "left")
+
+        #   D.  Bouton fermer en bas à droite
+        button_Fermer_Vanille_Option = tk.Button(self, text="Fermer", command= self.quit)
+        button_Fermer_Vanille_Option.pack(side = "right")
+
+
+
+
+
+    #   VI.  FONCTION D'OUVERTURE DES STRATÉGIES SUR OPTIONS
+    def show_option_strategies(self):
+        self.create_option_strategies_page()
+        self.parent.changer_titre("Stratégies sur Option")  
+
+
+    #   VII.    FONCTION DE CRÉATION DE LA PAGE "STRATÉGIES SUR OPTION"
+    def create_option_strategies_page(self):
+        self.clear_frame()
+        
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x')  #   "fill=x" --> pour étendre horizontalement
+        
+        #   A.1.    Bouton retour (placé dans le bloc du haut)
+        button_retour = tk.Button(self.frame_haut, text="Menu Principal", command=self.main_page)
+        button_retour.pack(side="left", padx=10, pady=10)
+
+
+        #   B.  Bloc en bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self)  
+        self.frame_bas.pack(side='top', fill='both', expand=True)   #    "fill=both" et 'expand=True' pour occuper l'espace restant
+        
+        #   B.1.    Texte --> Choisir la stratégie sur option
+        Texte_Strategie = tk.Label(self.frame_bas, text="Choisir la Stratégie :")
+        Texte_Strategie.pack(pady=10)
+
+        #   B.2.    Bouton --> Covered Call
+        button_covered_call = tk.Button(self.frame_bas, text="Covered Call", command=lambda: self.show_strategie_frame("Covered Call"))
+        button_covered_call.pack(fill=tk.X, padx=50, pady=5)
+        
+        #   B.3.    Bouton --> Bull Call Spread
+        button_call_spread = tk.Button(self.frame_bas, text="Bull Call Spread", command=lambda: self.show_strategie_frame("Bull Call Spread"))
+        button_call_spread.pack(fill=tk.X, padx=50, pady=5)
+
+        #   B.4.    Bouton --> Bear Put Spread
+        button_put_spread = tk.Button(self.frame_bas, text="Bear Put Spread", command=lambda: self.show_strategie_frame("Bear Put Spread"))
+        button_put_spread.pack(fill=tk.X, padx=50, pady=5)
+
+        #   B.5.    Bouton --> Iron Condor
+        button_iron_condor = tk.Button(self.frame_bas, text="Iron Condor", command=lambda: self.show_strategie_frame("Iron Condor"))
+        button_iron_condor.pack(fill=tk.X, padx=50, pady=5)
+
+        #   B.6.    Bouton --> Butterfly Spread
+        button_butterfly = tk.Button(self.frame_bas, text="Butterfly", command=lambda: self.show_strategie_frame("Butterfly"))
+        button_butterfly.pack(fill=tk.X, padx=50, pady=5)
+
+        #   B.7.    Bouton --> Straddle
+        button_straddle = tk.Button(self.frame_bas, text="Straddle", command=lambda: self.show_strategie_frame("Straddle"))
+        button_straddle.pack(fill=tk.X, padx=50, pady=5)
+
+        #   B.8.    Bouton --> Strangle
+        button_strangle = tk.Button(self.frame_bas, text="Strangle", command=lambda: self.show_strategie_frame("Strangle"))
+        button_strangle.pack(fill=tk.X, padx=50, pady=5)
+
+        
+        #   C.  Bouton d'aide (?) en bas à gauche
+        button_Aide_Strategie_Option = tk.Button(self, text="?", command= self.Aide_Strategies_Options)
+        button_Aide_Strategie_Option.pack(side = "left")
+
+        #   D.  Bouton fermer en bas à droite
+        button_Fermer_Strategie_Option = tk.Button(self, text="Fermer", command= self.quit)
+        button_Fermer_Strategie_Option.pack(side = "right")
+
+
+
+
+    #   IX. FONCTION D'OUVERTURE DES OPTIONS À BARRIÈRE
+    def show_barrier_options(self):
+        self.create_barriere_page()
+        self.parent.changer_titre("Options à Barrière")  
+    
+
+    #   X.  FONCTION DE CRÉATION DE LA PAGE "OPTIONS À BARRIÈRE"
+    def create_barriere_page(self):
+        self.clear_frame()
+        
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x')  # 'fill=x' pour étendre horizontalement
+        
+        #   A.1.    Bouton retour (placé dans le bloc du haut)
+        button_retour = tk.Button(self.frame_haut, text="Menu Principal", command=self.main_page)
+        button_retour.pack(side="left", padx=10, pady=10)
+
+
+        #   B.  Bloc en bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self)  
+        self.frame_bas.pack(side='top', fill='both', expand=True)  # 'fill=both' et 'expand=True' pour occuper l'espace restant
+        
+        #   B.1.    Texte --> Choisir le type de Barriere sur option  
+        Texte_Barriere = tk.Label(self.frame_bas, text="Choisir le type de barrière :")
+        Texte_Barriere.pack(pady=10)
+
+        #   B.2.    Bouton -->  Up and In (Barrière en Haut et Activante)
+        button_up_in = tk.Button(self.frame_bas, text="Up and In", command=lambda: self.show_barriere_frame('Up and In'))
+        button_up_in.pack(fill=tk.X, padx=50, pady=5)
+        
+        #   B.3.    Bouton --> Up and Out (Barrière en Bas et Désactivante)
+        button_up_out = tk.Button(self.frame_bas, text="Up and Out", command=lambda: self.show_barriere_frame('Up and Out'))
+        button_up_out.pack(fill=tk.X, padx=50, pady=5)
+        
+        #   B.4.    Bouton --> Down and In (Barrière en Bas et Activante)
+        button_down_in = tk.Button(self.frame_bas, text="Down and In", command=lambda: self.show_barriere_frame('Down and In'))
+        button_down_in.pack(fill=tk.X, padx=50, pady=5)
+
+        #   B.5.    Bouton --> Down and Out (Barrière en Bas et Désactivante)
+        button_down_out = tk.Button(self.frame_bas, text="Down and Out", command=lambda: self.show_barriere_frame('Down and Out'))
+        button_down_out.pack(fill=tk.X, padx=50, pady=5)
+
+        
+        #   C.  Bouton d'aide (?) en bas à gauche
+        button_Aide_Barriere_Option = tk.Button(self, text="?", command= self.Aide_Barriere_Options)
+        button_Aide_Barriere_Option.pack(side = "left")
+
+        #   D.  Bouton fermer en bas à gauche
+        button_Fermer_Barriere_Option = tk.Button(self, text="Fermer", command= self.quit)
+        button_Fermer_Barriere_Option.pack(side = "right")
+
+
+
+
+    #   VII.  FONCTION POUR NETTOYER LA PAGE
+    def clear_frame(self): #la fonction permettant de nettoyer la page
+        for widget in self.winfo_children():
+            widget.destroy()
+
+
+
+
+    #   VIII.   FONCTION DE LANCEMENT DE LA LOGIQUE DE CALCUL DES OPTIONS VANILLES
+    def show_calculation_frame(self, option_type):
+        self.clear_frame()
+        self.calculation_frame = CalculationOptionsFrame(self, option_type, self.create_vanille_page, self.main_page)
+        self.calculation_frame.pack(fill=tk.BOTH, expand=True)
+
+
+    #   IX.   FONCTION DE LANCEMENT DE LA LOGIQUE DE CALCUL DES STRATÉGIES SUR OPTION
+    def show_strategie_frame(self, strategie_type):
+        self.clear_frame()
+        self.strategie_frame = OptionStrategiesFrame(self, strategie_type, self.create_option_strategies_page, self.main_page)
+        self.strategie_frame.pack(fill=tk.BOTH, expand=True)
+    
+
+    #   X.   FONCTION DE LANCEMENT DE LA LOGIQUE DE CALCUL DES OPTIONS À BARRIÈRE
+    def show_barriere_frame(self, barriere_type):
+        self.clear_frame()
+        self.barriere_frame = BarrierOptionsPage(self, barriere_type, self.create_barriere_page, self.main_page)
+        self.barriere_frame.pack(fill=tk.BOTH, expand=True)
+
+
+
+    #   XI.   TEXTE D'AIDE SUR LES OPTIONS VANILLES
+    def Aide_Vanille_Option(self):
+        texte = """
+        CALL vs PUT :
+        -------------
+
+        Vous devez choisir entre un call et un put. Voici leur definition :
+
+        - Options d'achat (Call) : Une option d'achat donne à l'acheteur 
+            le droit, mais pas l'obligation, d'acheter un actif sous-jacent 
+            à un prix fixé à l'avance (le prix d'exercice), à tout moment 
+            avant une certaine date d'expiration. Si le prix du marché de 
+            l'actif dépasse le prix d'exercice, l'acheteur de l'option peut 
+            réaliser un profit en exerçant son option d'achat à un prix 
+            inférieur au prix du marché.
+
+        Options de vente (Put) : Une option de vente donne à l'acheteur 
+            le droit, mais pas l'obligation, de vendre un actif sous-jacent 
+            à un prix fixé à l'avance (le prix d'exercice), à tout moment 
+            avant une certaine date d'expiration. Si le prix du marché de 
+            l'actif tombe en dessous du prix d'exercice, l'acheteur de 
+            l'option peut réaliser un profit en exerçant son option de 
+            vente à un prix supérieur au prix du marché.
+
+        
+        Ces instruments financiers sont utilisés à diverses fins, y compris 
+        la spéculation sur la direction future des prix d'un actif, la couverture 
+        contre des mouvements de prix défavorables et l'obtention d'un revenu 
+        additionnel sur des portefeuilles d'actifs.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        Texte_aide(self, texte)
+
+
+
+
+    #   XII.   TEXTE D'AIDE SUR LES STRATÉGIES SUR OPTION
+    def Aide_Strategies_Options(self):
+        texte = """
+        STRATEGIES SUR OPTION:
+        ----------------------
+
+        Comme vous le savez, les options avantage énormément la personne qui 
+        les achète (long call / long put) en raison du Payoff (profil de 
+        rendement-perte) à terme. En effet, la personne qui est acheteuse 
+        d'option aura un gain potentiel illimité (proportionnel au mouvement 
+        de marché du sous-jacent) et une perte limitée au prix de la PRIME de 
+        l'option.
+
+        Tandis que la personne qui est vendeuse (short call / short put) est 
+        moins avantagée, en raison de son payoff (profil de rendement-perte à 
+        terme). En effet, le vendeur d'options a un rendement limité (son gain 
+        se fait sur la PRIME de l'option) et une perte illimitée (proportionnelle 
+        au mouvement de marché du sous-jacent).
+
+        Ainsi, pour que les vendeurs d'options puissent se couvrir contre ce 
+        risque de perte illimitée, ils vont utiliser des stratégies sur options. 
+        Ces stratégies vont permettre de minimiser la perte (transformer la perte 
+        illimitée en perte limitée), voire de gagner de l'argent sur les mouvements 
+        du sous-jacent. Ces stratégies dépendront principalement des anticipations 
+        de volatilité de l'investisseur. Certaines stratégies favoriseront une faible 
+        volatilité, d'autres favoriseront une forte volatilité.
+
+
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        Texte_aide(self, texte)
+
+
+
+
+
+    #   XIII.   TEXTE D'AIDE SUR LES OPTIONS À BARRIÈRE
+    def Aide_Barriere_Options(self):
+        texte = """
+        OPTIONS À BERRIÈRE :
+        -------------------
+
+        Généralement, dans un contrat d'options, les vendeurs rajoutent une barrière 
+        au contrat. En effet, plusieurs raisons expliquent cela :
+        
+        - La barrière sur option vient diminuer la probabilité de gain de l'acheteur 
+            (car la barrière s'active (ou se désactive) seulement si un certain niveau 
+            du sous-jacent est atteint). Ainsi, cette incertitude va venir faire 
+            diminuer le prix de l'option. Un investisseur qui souhaite payer une somme 
+            plus faible, et qui est sûr de son anticipation sur le sous-jacent, aura tout 
+            intérêt à ajouter une barrière au contrat.
+
+        - La barrière sur option augmente la probabilité de gain de la banque (émettrice 
+            d'option). Ainsi, la banque aura tout intérêt à ajouter une barrière au contrat 
+            (pour les mêmes raisons que l'acheteur de l'option peut perdre sur le contrat 
+            avec barrière).
+
+        Il existe ainsi une infinité de barrières, les 4 étudiées sont les plus utilisées. 
+        Nous avons :
+        - Barrières KNOCK-IN (Barrières ACTIVANTES) : Elles commencent à agir comme des 
+            options normales seulement lorsque le prix du sous-jacent atteint la barrière. 
+            Elles peuvent donc ne pas se déclencher du tout. Ces barrières sont les 
+            UP and IN et les DOWN and IN.
+        - Barrières KNOCK-OUT (Barrière DÉSACTIVANTE) : Si le prix du sous-jacent atteint 
+            la barrière, l'option expire automatiquement. Elle ne reste active que si le 
+            prix reste en dessous de la barrière. Ces barrières sont les Up and OUT et les 
+            DOWN and OUT.
+                    
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        Texte_aide(self, texte)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#   CRÉATION DE LA CLASSE DE LA LOGIQUE DE CALCUL DES OPTIONS VANILLES
+class CalculationOptionsFrame(ttk.Frame):
+    def __init__(self, master, option_type, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.master = master
+        self.option_type = option_type
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.last_parameters = None
+        self.payoff_window = None
+        self.create_widgets()
+
+
+
+
+    #   I.  FONCTION POUR LE BOUTON DE RETOUR EN HAUT À GAUCHE
+    def Bouton_de_Retour(self) :
+        
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+
+        #   B.    Menu déroulant
+        retourBtn = Menubutton(self.frame_haut, text="Retour")
+        retourBtn.menu = Menu(retourBtn, tearoff=0)                 #  "tearoff=0" --> supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback )
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+        #   C.  Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+
+    #   II. FONCTION DE MISE EN PAGE --> PAGE DE CALL/PUT
+    def create_widgets(self):
+        
+        #   A.  Mise en place du bouton de retour (utilisation de la fonction "Bouton_de_Retour")
+        self.Bouton_de_Retour()
+        
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        #   B.1.1    Texte Ticker (Nom de l'entreprise sur les marchés financiers)
+        self.label_ticker = tk.Label(self.frame_bas, text='Ticker', bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_ticker.place(x=30, y=30)
+        #   B.1.2.   Zone de texte Ticker
+        self.ticker_entry = tk.Entry(self.frame_bas, width=13)
+        self.ticker_entry.insert(0, "AAPL") 
+        self.ticker_entry.place(x=170, y=25)
+        #   B.1.3.  Bouton aide ticker
+        button_aide_ticker = tk.Button(self.frame_bas, text="?", command= self.Aide_Ticker)
+        button_aide_ticker.place(x=303, y=25)
+
+
+        #   B.2.1.  Texte Strike (Prix d'exercice)
+        self.label_strike = tk.Label(self.frame_bas, text="Prix d'exercice", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_strike.place(x=30, y=70) 
+        #   B.2.2.  Zone de texte du Strike
+        self.K_entry = tk.Entry(self.frame_bas, width=13)
+        self.K_entry.insert(0, "160") 
+        self.K_entry.place(x=170, y=65)
+        #   B.2.3.  Bouton aide ticker
+        button_aide_strike = tk.Button(self.frame_bas, text="?", command= self.Aide_Strike)
+        button_aide_strike.place(x=303, y=65)
+
+
+        #   B.3.1.  Texte Taux sans risque
+        self.label_taux = tk.Label(self.frame_bas, text="taux sans risque", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_taux.place(x=30, y=110) 
+        #   B.3.2.  Zone de texte Taux sans risque
+        self.r_entry = tk.Entry(self.frame_bas, width=13)
+        self.r_entry.insert(0, "5")
+        self.r_entry.place(x=170, y=105)
+        #   B.3.3.  Bouton aide taux sans risque
+        button_aide_taux = tk.Button(self.frame_bas, text="?", command= self.Aide_Taux)
+        button_aide_taux.place(x=303, y=105)
+
+
+        #   B.4.1.  Texte Temps
+        self.label_temps = tk.Label(self.frame_bas, text="Temps restant (jours)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_temps.place(x=30, y=150) 
+        #   B.4.2.  Zone de texte du Temps
+        self.T_entry = tk.Entry(self.frame_bas, width=13)
+        self.T_entry.insert(0, "50") 
+        self.T_entry.place(x=170, y=145)
+        #   B.4.3.  Bouton aide temps
+        button_aide_temps = tk.Button(self.frame_bas, text="?", command= self.Aide_Temps)
+        button_aide_temps.place(x=303, y=145)
+
+
+        #   B.5.1.  Texte Volatilité
+        self.label_volatilite = tk.Label(self.frame_bas, text="Volatilité (%)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_volatilite.place(x=30, y=190) 
+        #   B.5.2.  Zone de texte de la Volatilité
+        self.sigma_entry = tk.Entry(self.frame_bas, width=13)
+        self.sigma_entry.insert(0, "20") 
+        self.sigma_entry.place(x=170, y=185)
+        #   B.5.2.  Bouton aide Volatilité
+        button_aide_volatilite = tk.Button(self.frame_bas, text="?", command= self.Aide_Volatilite)
+        button_aide_volatilite.place(x=303, y=185)
+
+
+        #   B.6.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=230)
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x')  
+        
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide_Call_Put)
+        button_aide2.pack(side="left", padx=10, pady=10)
+        
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+
+        #   D.  Toute modification de la valeur des zones de textes mettrons à jour automatiquement le résultat
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+
+
+    #   III. TEXTE D'AIDE CALL OU PUT
+    def Aide_Call_Put(self) :
+        
+        #   A.  Texte -->   si Call
+        if self.option_type == 'call':
+            texte = """
+            CALL :
+            ------
+
+            Vous avez choisi le Call.
+
+            Comme vous pouvez le voir, notre interface propose de choisir 
+            les différents paramètres de votre option afin de calculer :
+            - Le prix de l'option (la prime)
+            - Le payoff (le profil de rendement/perte)
+            - Les grecques qui peuvent impacter la position du vendeur sur 
+                cette option.
+
+            Pour le calcul, nous utilisons la formule de Black and Scholes.
+
+            Pour avoir plus d'informations sur la manière dont le prix et le 
+            profil de chaque option sont impactés par les paramètres, je vous 
+            invite à cliquer sur les boutons d'aide à droite de chaque zone 
+            de texte.
+
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+        #   B.  Texte -->   si Put
+        else :
+            texte = """
+            PUT :
+            -----
+
+            Vous avez choisi le Put.
+
+            Comme vous pouvez le voir, notre interface propose de choisir 
+            les différents paramètres de votre option afin de calculer :
+            - Le prix de l'option (la prime)
+            - Le payoff (le profil de rendement/perte)
+            - Les grecques qui peuvent impacter la position du vendeur sur 
+                cette option.
+
+            Pour le calcul, nous utilisons la formule de Black and Scholes.
+
+            Pour avoir plus d'informations sur la manière dont le prix et le 
+            profil de chaque option sont impactés par les paramètres, je vous 
+            invite à cliquer sur les boutons d'aide à droite de chaque zone 
+            de texte.
+
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+
+        #   C.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+        
+
+
+    #   IV. TEXTE TICKER (Nom de l'action sur les marchés financiers)
+    def Aide_Ticker(self) :
+         
+        #   A.  Texte --> si Call
+        if self.option_type == 'call':
+            texte = """
+            TICKER (Action)
+            ---------------
+
+
+            Le ticker impacte énormément la prime de l'option. Ici, nous avons 
+            fait le choix de rentrer à la main les autres paramètres, mais selon 
+            l'action que nous choisissons, la volatilité, les dividendes... 
+            changent et impactent le prix.
+
+            Dans notre cas, l'action que nous choisirons permet de connaître la 
+            valeur 
+            actuelle du cours. En prenant un CALL, j'ai une vision haussière sur le 
+            sous-jacent que je choisis. Cela signifie qu'en achetant un call sur un 
+            sous-jacent Apple, j'anticipe que le cours de l'action APPLE augmentera 
+            dans le futur. Ainsi, en achetant une option d'achat, je me garantie de 
+            me couvrir contre une hausse de cette action, et donc d'acheter cette action 
+            moins chère dans le futur (car j'anticipe que le prix augmentera dans le 
+            futur).
+
+            Ainsi, le choix de son sous-jacent (ici une action) est très important pour 
+            le choix de son prix d'exercice (Strike) et la probabilité de gain future.
+
+            
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+        #   B.  Texte --> si Put
+        else :
+            texte = """
+            TICKER (Action)
+            ---------------
+
+            Le ticker impacte énormément la prime de l'option. Ici, nous avons 
+            fait le choix de rentrer à la main les autres paramètres, mais selon 
+            l'action que nous choisissons, la volatilité, les dividendes... changent 
+            et impactent le prix.
+
+            Dans notre cas, l'action que nous choisirons permet de connaître la valeur 
+            actuelle du cours. En prenant un PUT, j'ai une vision baissière sur le 
+            sous-jacent que je choisis. Cela signifie qu'en achetant un Put sur un 
+            sous-jacent Apple, j'anticipe que le cours de l'action APPLE diminuera 
+            dans le futur. Ainsi, en achetant une option de vente, je me garantie de 
+            me couvrir contre une baisse de cette action, et donc de vendre cette action 
+            plus chère dans le futur (car j'anticipe que le prix diminuera dans le 
+            futur).
+
+            Ainsi, le choix de son sous-jacent (ici une action) est très important pour 
+            le choix de son prix d'exercice (Strike) et la probabilité de gain future.
+
+            
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+
+        #   C.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   V.  TEXTE STRIKE 
+    def Aide_Strike(self) :
+        
+        #   A.  Texte --> si Call
+        if self.option_type == 'call':
+            texte = """
+            Le Prix d'exercice (STRIKE) :
+            -----------------------------
+
+            Le STRIKE est l'un des paramètres les plus importants de l'option. 
+            En effet, le choix du prix d'exercice peut affecter de manière 
+            considérable le prix de l'option. 
+
+            Dans notre cas (CALL) :
+                - Un Strike élevé est moins avantageux pour l'acquéreur de l'option, 
+                    car il s'engage à ACHETER l'actif à un prix plus élevé dans le futur, 
+                    ainsi le prix de l'option sera moins cher. 
+                - Un Strike faible est plus avantageux pour l'acquéreur de l'option, car 
+                    il s'engage à ACHETER l'actif à un prix moins élevé dans le futur, ainsi 
+                    le prix de l'option sera plus cher.
+
+            Ainsi, plus le Strike est faible (dans un contrat CALL), plus l'acquéreur de 
+            l'option (l'investisseur) est avantagé et plus l'option sera chère pour pallier 
+            à cet avantage.
+
+            
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+        
+        #   B.  Texte --> si Put
+        else :
+            texte = """
+            Le Prix d'exercice (STRIKE) :
+            -----------------------------
+
+            Le STRIKE est l'un des paramètres les plus importants de l'option. 
+            En effet, le choix du prix d'exercice peut affecter de manière 
+            considérable le prix de l'option. 
+
+            Dans notre cas (PUT) :
+                - Un Strike élevé est plus avantageux pour l'acquéreur de l'option, 
+                    car il s'engage à VENDRE l'actif à un prix plus élevé dans le futur, 
+                    ainsi le prix de l'option sera plus cher. 
+                - Un Strike faible est moins avantageux pour l'acquéreur de l'option, car 
+                    il s'engage à VENDRE l'actif à un prix moins élevé dans le futur, ainsi 
+                    le prix de l'option sera moins cher.
+
+            Ainsi, plus le Strike est faible (dans un contrat PUT), plus l'acquéreur de 
+            l'option (l'investisseur) est désavantagé et moins l'option sera chère pour pallier 
+            à ce désavantage.
+
+            
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+        
+        #   C.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VI. TEXTE TAUX SANS RISQUE
+    def Aide_Taux(self) :
+        
+        #   A.  Texte
+        texte = """
+        Le TAUX SANS RISQUE :
+        ---------------------
+
+
+        Le taux sans risque est un autre paramètre crucial dans l'évaluation des options. 
+        Il représente le rendement que l'on pourrait obtenir en investissant dans un actif 
+        sans risque, tel que les bons du Trésor d'État. Ce taux influence directement le 
+        prix des options, notamment les calls.
+
+        Lorsque le taux sans risque est élevé, cela signifie que les investisseurs peuvent 
+        obtenir un rendement plus élevé en plaçant leur argent dans des actifs sans risque 
+        plutôt que dans des options. Par conséquent, le prix des options, y compris les calls, 
+        tend à être plus bas, car leur attrait relatif diminue.
+
+        En revanche, lorsque le taux sans risque est bas, les options deviennent plus 
+        attrayantes pour les investisseurs, car elles offrent la possibilité de réaliser des 
+        gains potentiellement plus importants que les actifs sans risque. Ainsi, le prix des 
+        options, y compris les calls, a tendance à augmenter lorsque le taux sans risque est 
+        bas.
+
+        Ainsi, le taux sans risque exerce une influence significative sur le prix des options. 
+        Un taux sans risque élevé conduit généralement à des prix d'options plus bas, tandis 
+        qu'un taux sans risque bas tend à entraîner des prix d'options plus élevés, notamment 
+        pour les calls.
+        
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VII. TEXTE TEMPS
+    def Aide_Temps(self) :
+
+        #   A.  Texte
+        texte = """
+        TEMPS JUSQU'A ECHEANCE:
+        -----------------------
+
+        Le temps avant maturité, également appelé la durée de vie restante de l'option, 
+        est un autre facteur crucial dans l'évaluation des options. Il représente la 
+        période pendant laquelle l'option a encore la possibilité d'être exercée.
+
+        Plus le temps avant maturité est long, plus l'option a de chances de devenir 
+        rentable pour l'acheteur. Cela est particulièrement vrai pour les calls, car une 
+        longue période avant la maturité offre plus d'opportunités au cours du sous-jacent 
+        d'atteindre ou de dépasser le prix d'exercice.
+
+        Ainsi, lorsque le temps avant maturité est long, le prix d'un call tend à être plus 
+        élevé, car les acheteurs sont prêts à payer une prime plus importante pour avoir une 
+        plus longue période pour que l'option devienne rentable.
+
+        En revanche, lorsque le temps avant maturité est court, le prix d'un call a tendance à 
+        être plus bas, car il reste moins de temps pour que l'option devienne rentable. Les 
+        acheteurs sont donc moins disposés à payer une prime élevée pour une option avec une 
+        durée de vie limitée.
+
+        En résumé, le temps avant maturité exerce une influence significative sur le prix des 
+        options, en particulier sur celui des calls. Une période plus longue avant la maturité 
+        conduit généralement à des prix d'options plus élevés, tandis qu'une période plus courte 
+        avant la maturité tend à entraîner des prix d'options plus bas.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VIII. TEXTE VOLATILITÉ
+    def Aide_Volatilite(self) :
+        
+        #   A.  Texte
+        texte = """
+        VOLATILITE :
+        -------------------
+
+        La volatilité est un autre facteur essentiel dans l'évaluation des options. Elle 
+        mesure la magnitude des variations du prix du sous-jacent au fil du temps. Une 
+        volatilité élevée indique des fluctuations importantes, tandis qu'une volatilité 
+        faible signifie des variations plus modérées.
+
+        La volatilité a un impact significatif sur le prix des options, notamment sur celui 
+        des calls. Lorsque la volatilité est élevée, les mouvements de prix du sous-jacent 
+        sont plus prononcés, ce qui accroît la probabilité que le cours dépasse le prix 
+        d'exercice du call. Par conséquent, les calls sont plus précieux lorsque la 
+        volatilité est élevée, et leur prix augmente en conséquence.
+
+        En revanche, lorsque la volatilité est faible, les mouvements de prix du sous-jacent 
+        sont moins importants, ce qui réduit la probabilité que le cours dépasse le prix 
+        d'exercice du call. Par conséquent, les calls sont moins précieux lorsque la volatilité 
+        est faible, et leur prix tend à être plus bas.
+
+        Ainsi, la volatilité exerce une influence significative sur le prix des options, en 
+        particulier sur celui des calls. Une volatilité élevée conduit généralement à des prix 
+        d'options plus élevés, tandis qu'une volatilité faible tend à entraîner des prix 
+        d'options plus bas.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+
+    #   IX  FONCTION POUR RÉCUPÉRER LES INFORMATIONS
+    def recuperer_infos(self):
+
+        #   I.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        ticker = self.ticker_entry.get()
+        strike = self.K_entry.get()
+        taux = self.r_entry.get()
+        temps = self.T_entry.get()
+        volatilite = self.sigma_entry.get()
+
+        #   I.A  Vérification que toutes les cases sont remplies
+        if not all([ticker, strike, taux, temps, volatilite]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        #   I.B  Vérification de l'existence du ticker
+        try:
+            data = yf.Ticker(ticker)
+            if data.history(period="1d")["Close"].iloc[-1] is None:
+                raise ValueError("Le ticker n'existe pas")
+        except Exception as e:
+            messagebox.showerror("Erreur", f"Erreur avec le ticker: {e}")
+            return
+
+        #   I.C  Vérification que strike, taux, temps, et volatilité sont des chiffres
+        try:
+            strike = float(strike)
+            taux = float(taux)
+            temps = float(temps)
+            volatilite = float(volatilite)
+        except ValueError:
+            messagebox.showerror("Erreur", "Le strike, le taux, le temps et la volatilité doivent être des chiffres")
+            return
+
+        #   I.D.  Si toutes les vérifications sont passées, on lance la fonction de calcul du prix de l'option
+        self.fetch_and_calculate_option_price()
+        
+
+
+    #   II. CALCUL DU PRIX DES OPTIONS (EN UTILISANT LA FORMAULE DE BLACK-SCHOLES)
+    def fetch_and_calculate_option_price(self):
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        current_parameters = (
+            self.ticker_entry.get(), 
+            self.K_entry.get(), 
+            self.r_entry.get(), 
+            self.T_entry.get(), 
+            self.sigma_entry.get()
+        )
+
+        
+        #   B.  Les valeurs deviennent les paramètres de la formule de Black-Scholes
+        ticker = self.ticker_entry.get()
+        data = yf.Ticker(ticker)
+        S = data.history(period="1d")["Close"].iloc[-1]
+        K = float(self.K_entry.get())
+        r = float(self.r_entry.get()) / 100
+        T = float(self.T_entry.get()) / 365
+        sigma = float(self.sigma_entry.get()) / 100
+
+        #   C.  Calcul de la formule de Black-Scholes
+        d1 = (log(S / K) + (r + 0.5 * sigma ** 2) * T) / (sigma * sqrt(T))
+        d2 = d1 - sigma * sqrt(T)
+        
+        if self.option_type == 'call':
+            price = S * norm.cdf(d1) - K * exp(-r * T) * norm.cdf(d2)
+        else:
+            price = K * exp(-r * T) * norm.cdf(-d2) - S * norm.cdf(-d1)
+
+        self.result_var.set(f"Prix {self.option_type.upper()} : {price:.2f} (Sous-jacent: {S:.2f})")
+        self.display_greeks_and_payoff(S, K, r, T, sigma, price, d1, d2)
+
+
+
+    #   III.    CALCUL DES GRECQUES et AFFICHAGE DES GRAPHIQUES
+    def display_greeks_and_payoff(self, S, K, r, T, sigma, option_price, d1, d2):
+        
+        
+        #   A.  Calcul des grecques
+        delta = norm.cdf(d1) if self.option_type == 'call' else -norm.cdf(-d1)
+        gamma = norm.pdf(d1) / (S * sigma * sqrt(T))
+        vega = S * sqrt(T) * norm.pdf(d1) * 0.01
+        theta = (-S * sigma * norm.pdf(d1)) / (2 * sqrt(T)) - r * K * exp(-r * T) * norm.cdf(d2) * 0.01
+        rho = K * T * exp(-r * T) * norm.cdf(d2) * 0.01
+
+
+        #   B.  Affichage des grecques
+        greeks_labels = ['Delta', 'Gamma', 'Vega', 'Theta', 'Rho']
+        greeks_values = [delta, gamma, vega, theta, rho]
+        greeks_text = "\n".join([f"{label}: {value:.4f}" for label, value in zip(greeks_labels, greeks_values)])
+
+
+        #   C.  Affichage du prix de l'option
+        option_price_text = f"Prix de l'option: {option_price:.2f}"
+
+
+        #   D.  Calcul du payoff selon si c'est un Call ou un Put
+        stock_prices = np.linspace(0.5 * S, 1.5 * S, 100)
+        if self.option_type == 'call':
+            payoff = np.maximum(stock_prices - K, 0) - S*0.05
+        else:
+            payoff = np.maximum(K - stock_prices, 0) - S*0.05
+
+
+        #   E.  Tracé du graphique de payoff
+        plt.close()
+        plt.figure(figsize=(8, 6))
+        plt.plot(stock_prices, payoff, label="Payoff")
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(S, color='red', linestyle='--', label="Prix actuel S")
+        plt.axvline(K, color='green', linestyle='--', label="Strike K")
+        plt.fill_between(stock_prices, 0, payoff, where=(payoff > 0), color='green', alpha=0.3, interpolate=True)
+        plt.fill_between(stock_prices, 0, payoff, where=(payoff < 0), color='red', alpha=0.3, interpolate=True)
+        plt.legend()
+
+        if self.option_type == 'call':
+            plt.text(0.02, 0.8, greeks_text, transform=plt.gca().transAxes, ha='left', va='top')
+            plt.text(0.02, 0.6, option_price_text, transform=plt.gca().transAxes, ha='left', va='top')
+        else:
+            plt.text(0.98, 0.8, greeks_text, transform=plt.gca().transAxes, ha='right', va='top')
+            plt.text(0.98, 0.6, option_price_text, transform=plt.gca().transAxes, ha='right', va='top')
+        
+        plt.suptitle(f'Graphique de Payoff du {self.option_type}')
+        plt.title(option_price_text)
+        plt.xlabel('Prix du sous-jacent')
+        plt.ylabel('Payoff')
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+
+
+
+
+
+#   CRÉATION DE LA CLASSE DE LA LOGIQUE DE CALCUL DES OPTIONS VANILLES
+class OptionStrategiesFrame(ttk.Frame):
+    def __init__(self, master, strategie_type, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.master = master
+        self.option_type = strategie_type
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+
+        #   Selon la stratégie choisi, ça me renvoie directement à la fonction qui correspond
+        if self.option_type == "Covered Call":
+            self.show_covered_call()   
+        elif self.option_type == "Bull Call Spread" :
+            self.show_bull_call_spread()
+        elif self.option_type == "Bear Put Spread" :
+            self.show_bear_put_spread()
+        elif self.option_type == "Iron Condor" :
+            self.show_iron_condor()
+        elif self.option_type == "Butterfly" :
+            self.show_butterfly()
+        elif self.option_type == "Straddle" :
+            self.show_straddle()
+        else :
+            self.show_strangle()
+            
+
+    #   FONCTION POUR NETTOYER LA PAGE
+    def clear_frame(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+
+
+    #   LES FONCTIONS DE RENVOIE À LA STRATÉGIE CORRESPONDANTE
+
+    def show_covered_call(self):
+        self.clear_frame()
+        covered_call_page = CoveredCallPage(self, self.vanille_callback, self.retour_callback)
+        covered_call_page.pack(fill='both', expand=True)
+
+    def show_bull_call_spread(self):
+        self.clear_frame()
+        covered_call_page = BullCallSpreadPage(self, self.vanille_callback, self.retour_callback)
+        covered_call_page.pack(fill='both', expand=True)
+
+    def show_bear_put_spread(self):
+        self.clear_frame()
+        covered_call_page = BearPutSpreadPage(self, self.vanille_callback, self.retour_callback)
+        covered_call_page.pack(fill='both', expand=True)
+
+    def show_iron_condor(self):
+        self.clear_frame()
+        covered_call_page = IronCondorPage(self, self.vanille_callback, self.retour_callback)
+        covered_call_page.pack(fill='both', expand=True)
+
+    def show_butterfly(self):
+        self.clear_frame()
+        covered_call_page = ButterflySpreadPage(self, self.vanille_callback, self.retour_callback)
+        covered_call_page.pack(fill='both', expand=True)
+        
+    def show_straddle(self):
+        self.clear_frame()
+        covered_call_page = StraddlePage(self, self.vanille_callback, self.retour_callback)
+        covered_call_page.pack(fill='both', expand=True)
+
+    def show_strangle(self):
+        self.clear_frame()
+        covered_call_page = StranglePage(self, self.vanille_callback, self.retour_callback)
+        covered_call_page.pack(fill='both', expand=True)
+
+
+
+
+
+
+#   CLASSE --> STRATEGIE COVERED CALL
+class CoveredCallPage(tk.Frame):
+    def __init__(self, master, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.parent = master
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+    
+
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour")  # Utilisez 'self' pour l'ajouter à l'instance de PageApresConnexion
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  # 'tearoff=0' supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+
+        #   B.1.  Texte "Covered Call"  
+        self.label_texte1 = tk.Label(self.frame_bas, text="Covered Call Strategie", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=105, y=7) 
+
+
+        #   B.2.a.  Texte Strike CALL (Prix d'exercice)
+        self.label_strike = tk.Label(self.frame_bas, text="VENTE du CALL", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_strike.place(x=10, y=40) 
+        #   B.2.b.  Zone de texte du Strike
+        self.K_call_entry = tk.Entry(self.frame_bas, width=13)
+        self.K_call_entry.insert(0, "160") 
+        self.K_call_entry.place(x=170, y=35)
+        #   B.2.c.  Bouton aide ticker
+        button_aide_strike = tk.Button(self.frame_bas, text="?", command= self.Aide_Strike)
+        button_aide_strike.place(x=303, y=35)
+        
+
+        #   B.3.a.  Texte Strike SOUS-JACENT (Prix d'exercice)
+        self.K_sous_jacent_entry = tk.Label(self.frame_bas, text="ACHAT du SOUS-JACENT", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K_sous_jacent_entry.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte SOUS-JACENT
+        self.K_sous_jacent_entry = tk.Entry(self.frame_bas, width=13)
+        self.K_sous_jacent_entry.insert(0, "140")
+        self.K_sous_jacent_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide SOUS-JACENT
+        button_aide_sous_jacent = tk.Button(self.frame_bas, text="?", command= self.Aide_Sous_Jacent)
+        button_aide_sous_jacent.place(x=303, y=75)
+
+
+        #   B.4.    Texte d'information sur la stratégie
+        texte = "Attention ici, le Strike du CALL > Strike du SOUS-JACENT. \nPour plus d'informations, cliquez sur les boutons d'aide"
+        self.label_texte = tk.Label(self.frame_bas, text=texte, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte.place(x=5, y=140) 
+
+
+        #   B.5.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=230)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x')  
+        
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+        
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos(self):
+        
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        strike_call = self.K_call_entry.get()
+        prix_sous_jacent = self.K_sous_jacent_entry.get()
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([strike_call, prix_sous_jacent]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            strike_K = float(strike_call)
+            prix_sous_jacent = float(prix_sous_jacent)
+        except ValueError:
+            messagebox.showerror("Erreur", "Tous les paramètres doivent être des chiffres")
+            return
+
+        #   A.3.    Vérification de la condition de la stratégie
+        if prix_sous_jacent >= strike_K:
+            messagebox.showerror("Erreur", "Le prix du sous-jacent doit être inférieur au strike.")
+            return
+
+        #   A.4.    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la stratégie
+        self.calculate_covered_call()
+    
+
+
+    #   III.    FONCTION DE CALCUL DE LA STRATÉGIE
+    def calculate_covered_call(self) :
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        strike_price = float(self.K_call_entry.get())
+        forward_strike = float(self.K_sous_jacent_entry.get())
+
+
+        #   B.  Reproduit la valeur de mon sous-jacent en générant 100 valeurs linéairement espacées
+        stock_prices = np.linspace(0.5 * strike_price, 1.5 * strike_price, 100)
+
+
+        #   C.  Position longue sur le sous-jacent (droite passant par 0 au strike)
+        underlying_payoff = stock_prices - forward_strike
+
+
+        #   D.  Position courte sur le call au prix d'exercice
+        call_payoff = np.where(stock_prices <= strike_price, 0, strike_price - stock_prices)
+
+
+        #   E.  Payoff total de la stratégie Covered Call
+        covered_call_payoff = underlying_payoff + call_payoff
+
+
+        #   F.  Mise en place du graphique
+        plt.close()
+        plt.figure(figsize=(6, 4))
+        #   H.1.    Remplissage en vert là où le payoff est positif (gagnant)
+        plt.fill_between(stock_prices, covered_call_payoff, where=(covered_call_payoff >= 0), color='green', alpha=0.3)
+        #   H.2.    Remplissage en rouge là où le payoff est négatif (perdant)
+        plt.fill_between(stock_prices, covered_call_payoff, where=(covered_call_payoff < 0), color='red', alpha=0.3)
+        #   H.3.    Autres paramètres du graphique
+        plt.plot(stock_prices, underlying_payoff, color='orange', linestyle='--', label='Position Longue Sous-jacent')
+        plt.plot(stock_prices, call_payoff, color='blue', linestyle='--', label='Position Courte Call')
+        plt.plot(stock_prices, covered_call_payoff, color='red', label='Position Finale')
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(strike_price, color='green', linestyle='--', label='Strike')
+        plt.legend()
+        plt.title('Graphique de Payoff du Covered Call')
+        plt.xlabel('Prix du sous-jacent')
+        plt.ylabel('Payoff')
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+    
+
+
+    #   IV. TEXTE AIDE
+    def Aide(self) :
+
+        #   A.  Texte
+        texte = """
+        COVERED CALL :
+        -------------------
+        
+        Vous avez choisis le Covered Call
+
+        Une stratégie de "Covered Call" consiste pour un investisseur à détenir un actif 
+        sous-jacent, généralement des actions, tout en vendant des options d'achat (calls) 
+        sur le même actif. Cette technique a pour but de générer un revenu supplémentaire 
+        provenant de la prime reçue lors de la vente de l'option. Le détenteur de l'action 
+        est "couvert" car il possède déjà l'actif sous-jacent, ce qui réduit le risque en cas 
+        d'exercice de l'option par l'acheteur.
+
+        Toutefois, cette stratégie limite également le potentiel de gain : si le prix de 
+        l'actif augmente au-delà du prix d'exercice de l'option, le vendeur de l'option devra 
+        vendre l'actif au prix d'exercice, manquant ainsi les gains supplémentaires au-delà de 
+        ce niveau. En revanche, cette stratégie peut être avantageuse si l'on anticipe une faible 
+        volatilité ou une légère hausse du marché, permettant ainsi de conserver l'actif tout en 
+        bénéficiant de la prime de l'option vendue.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   V.  TEXTE AIDE STRIKE
+    def Aide_Strike(self) :
+
+        #   A.  Texte
+        texte = """
+        SHORT CALL (Vente d'une option d'achat) :
+        -----------------------------------------
+
+        La Stratégie du Covered Call, se base sur le fait que la banque (l'établissement) 
+        émetteur de l'option, vende une option d'achat à un investisseur. Se faisant, la 
+        banque à un profil de gain limité (à la prime) et de perte illimité (au mouvement du 
+        sous-jacent). 
+        
+        En vendant une option d'achat, la banque perd lorsque le sous-jacent évolue à la 
+        hausse et perd lorsque celui-ci évolue à la baisse.
+
+        Le Covered Call permettra donc de se couvrir contre le risque de hausse.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VI. TEXTE AIDE SOUS-JACENT
+    def Aide_Sous_Jacent(self) :
+
+        #   A.  Texte
+        texte = """
+        LONG SOUS-JACENT :
+        ------------------
+
+        Pour faire face au risque de hausse du sous-jacent, la banque va chercher à se 
+        couvrir en position longue sur le Sous-Jacent. Ce qui va permettre, en cas de 
+        hausse du sous-jacent, de gagner sur la valeur absolue du sous-jacent.
+        
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+
+
+#   CLASSE --> STRATEGIE BULL CALL SPREAD
+class BullCallSpreadPage(tk.Frame):
+    def __init__(self, master, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.parent = master
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour")  # Utilisez 'self' pour l'ajouter à l'instance de PageApresConnexion
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  # 'tearoff=0' supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+
+        #   B.1.  Texte "Bull Call Spread"  
+        self.label_texte1 = tk.Label(self.frame_bas, text="Bull Call Spread Strategie", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=100, y=7) 
+
+
+        #   B.2.a.  Texte "Achat Call K1"
+        self.K1= tk.Label(self.frame_bas, text="Achat CALL (k1)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K1.place(x=10, y=40) 
+        #   B.2.b.  Zone de texte K1
+        self.K1_entry = tk.Entry(self.frame_bas, width=13)
+        self.K1_entry.insert(0, "120") 
+        self.K1_entry.place(x=170, y=35)
+        #   B.2.c.  Bouton aide K1
+        button_aide_K1_entry = tk.Button(self.frame_bas, text="?", command= self.Aide_K1)
+        button_aide_K1_entry.place(x=303, y=35)
+
+        
+        #   B.3.a.  Texte "Vente Call K2"
+        self.K2 = tk.Label(self.frame_bas, text="Vente Call (k2)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K2.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte K2
+        self.K2_entry = tk.Entry(self.frame_bas, width=13)
+        self.K2_entry.insert(0, "140")
+        self.K2_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide K2
+        button_aide_K2 = tk.Button(self.frame_bas, text="?", command= self.Aide_K2)
+        button_aide_K2.place(x=303, y=75)
+
+
+        #   B.4.    Texte d'information sur la stratégie
+        texte = "Attention ici, le Strike du CALL (k1) < Strike du Call (k2). \nPour plus d'informations, cliquez sur les boutons d'aide"
+        self.label_texte = tk.Label(self.frame_bas, text=texte, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte.place(x=5, y=140) 
+        
+
+        #   B.5.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=230)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x')
+
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos(self):
+
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        strike_K1 = self.K1_entry.get()
+        strike_K2 = self.K2_entry.get()
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([strike_K1, strike_K2]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            strike_K1 = float(strike_K1)
+            strike_K2 = float(strike_K2)
+        except ValueError:
+            messagebox.showerror("Erreur", "Tous les paramètres doivent être des chiffres")
+            return
+
+        #   A.3.    Vérification de la condition de la stratégie
+        if strike_K1 >= strike_K2:
+            messagebox.showerror("Erreur", "Le prix de la vente call (k2) doit être superieur au à l'achat call (k1).")
+            return
+
+        #   A.4.    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la stratégie
+        self.calculate_call_spread()
+    
+
+
+    #   III.    FONCTION DE CALCUL DE LA STRATÉGIE
+    def calculate_call_spread(self) :
+
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        lower_strike = float(self.K1_entry.get())
+        upper_strike = float(self.K2_entry.get())
+
+
+        #   B.  Reproduit la valeur de mon sous-jacent en générant 100 valeurs linéairement espacées
+        stock_prices = np.linspace(0.5 * lower_strike, 1.5 * upper_strike, 100)
+
+
+        #   C.  Position longue sur le Call (K1)
+        long_call_payoff = np.maximum(stock_prices - lower_strike, 0) - lower_strike*0.2
+
+
+        #   D.  Position courte sur le call (K2)
+        short_call_payoff = - (np.maximum(stock_prices - upper_strike, 0)) + upper_strike*0.1
+
+
+        #   E.  Payoff total de la stratégie Bull Call Spread
+        bull_call_spread_payoff = long_call_payoff + short_call_payoff
+
+        
+        #   F.  Mise en place du graphique
+        plt.close()
+        plt.figure(figsize=(6, 4))
+        plt.plot(stock_prices, bull_call_spread_payoff, color='red', label='Bull Call Spread Payoff')
+        plt.plot(stock_prices, long_call_payoff, color='orange', linestyle='--', label='Position Longue Call')
+        plt.plot(stock_prices, short_call_payoff, color='purple', linestyle='--', label='Position Courte Call')
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(lower_strike, color='green', linestyle='--', label='Lower Strike')
+        plt.axvline(upper_strike, color='blue', linestyle='--', label='Upper Strike')
+        #   H.1.    Remplissage en vert là où le payoff est positif (gagnant)
+        plt.fill_between(stock_prices, bull_call_spread_payoff, where=(bull_call_spread_payoff > 0), color='green', alpha=0.3)
+        #   H.2.    Remplissage en rouge là où le payoff est négatif (perdant)
+        plt.fill_between(stock_prices, bull_call_spread_payoff, where=(bull_call_spread_payoff < 0), color='red', alpha=0.3)
+        #   H.3.    Autres paramètres du graphique        
+        plt.legend()
+        plt.title('Graphique de Payoff du Bull Call Spread')
+        plt.xlabel('Prix du sous-jacent')
+        plt.ylabel('Payoff')
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+
+
+
+    #   IV. TEXTE AIDE
+    def Aide(self) :
+
+        #   A.  Texte
+        texte = """
+        BULL CALL SPREAD :
+        ------------------
+
+        Une stratégie "Bull Call Spread" implique pour un investisseur l'achat 
+        d'une option d'achat (call) à un prix d'exercice inférieur, tout en vendant 
+        simultanément une autre option d'achat à un prix d'exercice supérieur sur le 
+        même actif sous-jacent. Cette technique vise à tirer profit d'une hausse 
+        modérée du prix de l'actif, tout en limitant les coûts initiaux grâce à la 
+        prime perçue pour l'option vendue.
+
+        
+        En résumé, le "Bull Call Spread" est une stratégie optimisée pour les scénarios 
+        où l'investisseur prévoit une progression contrôlée du prix de l'actif, 
+        permettant de concilier l'opportunité d'un gain avec la gestion rigoureuse du 
+        risque.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+   
+
+
+    #   V.  TEXTE AIDE K1
+    def Aide_K1(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT CALL (K1) :
+        -----------------
+
+        Le fait que le Strike du long Call soit < à celui du short Call (K2), 
+        me permet de bénéficier de toute la hausse du sous-jacent compris entre 
+        K1 et K2. Le gain s'applatit dès lors que K1 >= à K2.
+
+        Ainsi, plus la différence entre K1 et K2 est grande (avec K1 < K2), 
+        plus je suis gagnant sur la stratégie.
+        
+
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VI. TEXTE AIDE K2
+    def Aide_K2(self) :
+
+        #   A.  Texte
+        texte = """
+        VENTE CALL (K2) :
+        -----------------
+
+        La stratégie sert à se couvrir contre une position courte sur un call.
+        En effet, le rendement de la position courte sur le Call est 
+        désavantageuse car, mon gain est limitée (à la Prime) et ma perte est 
+        illimitée (aux mouvements du sous-jacent). 
+
+        Ainsi, la stratégie consiste à se couvrir contre la perte, en anticipant
+        un mouvement à la hausse de mon sous-jacent.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+
+
+#   CLASSE --> BEAR PUT SPREAD
+class BearPutSpreadPage(tk.Frame):
+    def __init__(self, master, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.parent = master
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour")  # Utilisez 'self' pour l'ajouter à l'instance de PageApresConnexion
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  # 'tearoff=0' supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+
+        #   B.1.  Texte "Bear Put Spread"  
+        self.label_texte1 = tk.Label(self.frame_bas, text="Bear Put Spread Strategie", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=100, y=7) 
+
+
+        #   B.2.a.  Texte "Achat Put K1"
+        self.K1= tk.Label(self.frame_bas, text="Achat PUT (k1)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K1.place(x=10, y=40) 
+        #   B.2.b.  Zone de texte K1
+        self.K1_entry = tk.Entry(self.frame_bas, width=13)
+        self.K1_entry.insert(0, "120") 
+        self.K1_entry.place(x=170, y=35)
+        #   B.2.c.  Bouton aide K1
+        button_aide_K1_entry = tk.Button(self.frame_bas, text="?", command= self.Aide_K1)
+        button_aide_K1_entry.place(x=303, y=35)
+
+        
+        #   B.3.a.  Texte "Vente Put K2"
+        self.K2 = tk.Label(self.frame_bas, text="Vente PUT (k2)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K2.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte K2
+        self.K2_entry = tk.Entry(self.frame_bas, width=13)
+        self.K2_entry.insert(0, "100")
+        self.K2_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide K2
+        button_aide_K2 = tk.Button(self.frame_bas, text="?", command= self.Aide_K2)
+        button_aide_K2.place(x=303, y=75)
+
+
+        #   B.4.    Texte d'information sur la stratégie
+        texte = "Attention ici, le Strike du PUT (k1) > Strike du PUT (k2). \nPour plus d'informations, cliquez sur les boutons d'aide"
+        self.label_texte = tk.Label(self.frame_bas, text=texte, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte.place(x=5, y=140) 
+
+
+        #   B.5.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=230)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x')  
+
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos(self):
+
+
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        strike_K1 = self.K1_entry.get()
+        strike_K2 = self.K2_entry.get()
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([strike_K1, strike_K2]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            strike_K1 = float(strike_K1)
+            strike_K2 = float(strike_K2)
+        except ValueError:
+            messagebox.showerror("Erreur", "Tous les paramètres doivent être des chiffres")
+            return
+
+        #   A.3.    Vérification de la condition de la stratégie
+        if strike_K2 >= strike_K1:
+            messagebox.showerror("Erreur", "Le prix de l'achat du put (k1) doit être superieur au à la vente du put (k2).")
+            return
+
+        #   A.4.    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la stratégie
+        self.calculate_put_spread()
+    
+
+
+    #   III.    FONCTION DE CALCUL DE LA STRATÉGIE
+    def calculate_put_spread(self) :
+
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        upper_strike = float(self.K1_entry.get())
+        lower_strike = float(self.K2_entry.get())
+        
+
+        #   B.  Reproduit la valeur de mon sous-jacent en générant 100 valeurs linéairement espacées
+        stock_prices = np.linspace(0.5 * lower_strike, 1.5 * upper_strike, 100)
+
+
+        #   C.  Position longue sur le Put (K1)
+        long_put_payoff = (np.maximum(upper_strike - stock_prices, 0)) - upper_strike*0.15
+
+
+        #   D.  Position courte sur le Put (K2)
+        short_put_payoff = - np.maximum(lower_strike - stock_prices, 0) + lower_strike*0.1
+
+
+        #   E.  Payoff de la stratégie Bear Put Spread
+        bear_put_spread_payoff = long_put_payoff + short_put_payoff
+
+
+        #   F.  Mise en place du graphique
+        plt.close()
+        plt.figure(figsize=(6, 4))
+        plt.plot(stock_prices, bear_put_spread_payoff, color='red', label='Bear Put Spread Payoff')
+        plt.plot(stock_prices, long_put_payoff, color='orange', linestyle='--', label='Position Longue Put')
+        plt.plot(stock_prices, short_put_payoff, color='purple', linestyle='--', label='Position Courte Put')
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(lower_strike, color='green', linestyle='--', label='Lower Strike')
+        plt.axvline(upper_strike, color='blue', linestyle='--', label='Upper Strike')
+        #   H.1.    Remplissage en vert là où le payoff est positif (gagnant)
+        plt.fill_between(stock_prices, bear_put_spread_payoff, where=(bear_put_spread_payoff > 0), color='green', alpha=0.3)
+        #   H.2.    Remplissage en rouge là où le payoff est négatif (perdant)
+        plt.fill_between(stock_prices, bear_put_spread_payoff, where=(bear_put_spread_payoff < 0), color='red', alpha=0.3)
+        #   H.3.    Autres paramètres du graphique        
+        plt.legend()
+        plt.title('Graphique de Payoff du Bear Put Spread')
+        plt.xlabel('Prix du sous-jacent')
+        plt.ylabel('Payoff')
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+
+
+
+
+    #   IV. TEXTE AIDE
+    def Aide(self) :
+
+        #   A.  Texte
+        texte = """
+        BEAR PUT SPREAD :
+        -----------------
+
+        Une stratégie "Bear Put Spread" consiste pour un investisseur à acheter 
+        une option de vente (put) à un prix d'exercice supérieur, tout en vendant 
+        simultanément une autre option de vente à un prix d'exercice inférieur sur 
+        le même actif sous-jacent. Cette approche est adoptée dans l'anticipation 
+        d'une baisse modérée du prix de l'actif. En achetant et vendant ces options, 
+        l'investisseur cherche à bénéficier de la dépréciation de l'actif tout en 
+        limitant les coûts initiaux grâce à la prime obtenue pour l'option vendue.
+
+
+        En résumé, le "Bear Put Spread" est idéal pour les investisseurs qui prévoient 
+        une baisse modérée du prix d'un actif, offrant une stratégie qui équilibre la 
+        possibilité de gains avec une gestion prudente des pertes.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   V.  TEXTE AIDE K1
+    def Aide_K1(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT PUT (K1) :
+        ----------------
+
+        L'investisseur va profiter de la différence entre le prix d'exercice de 
+        la vente du PUT, et celui de l'achat du PUT.
+
+        Ainsi, le bénéfice de l'investisseur se fera entre K1 et K2. Donc, plus 
+        la différence entre K1 et K2 est grande, plus je suis gagnant sur la 
+        stratégie.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    
+    #   VI. TEXTE AIDE K2
+    def Aide_K2(self) :
+
+        #   A.  Texte
+        texte = """
+        VENTE PUT (K2) :
+        -------------------
+
+        L'investisseur va profiter de la différence entre le prix d'exercice de 
+        la vente du PUT, et celui de l'achat du PUT.
+
+        Ainsi, le bénéfice de l'investisseur se fera entre K1 et K2. Donc, plus 
+        la différence entre K1 et K2 est grande, plus je suis gagnant sur la 
+        stratégie.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+
+
+#   CLASSE --> IRON CONDOR
+class IronCondorPage(tk.Frame):
+    def __init__(self, master, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.parent = master
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour")  # Utilisez 'self' pour l'ajouter à l'instance de PageApresConnexion
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  # 'tearoff=0' supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+
+        #   B.1.  Texte "Iron Condor"  
+        self.label_texte1 = tk.Label(self.frame_bas, text="Iron Condor Strategie", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=105, y=7) 
+
+
+        #   B.2.a.  Texte "Achat Put K1"
+        self.K1= tk.Label(self.frame_bas, text="Achat PUT (k1)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K1.place(x=10, y=40) 
+        #   B.2.b.  Zone de texte K1
+        self.K1_entry = tk.Entry(self.frame_bas, width=13)
+        self.K1_entry.insert(0, "120") 
+        self.K1_entry.place(x=170, y=35)
+        #   B.2.c.  Bouton aide K1
+        button_aide_K1_entry = tk.Button(self.frame_bas, text="?", command= self.Aide_K1)
+        button_aide_K1_entry.place(x=303, y=35)
+
+        
+        #   B.3.a.  Texte "Vente Put K2"
+        self.K2 = tk.Label(self.frame_bas, text="Vente PUT (k2)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K2.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte K2
+        self.K2_entry = tk.Entry(self.frame_bas, width=13)
+        self.K2_entry.insert(0, "140")
+        self.K2_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide K2
+        button_aide_K2 = tk.Button(self.frame_bas, text="?", command= self.Aide_K2)
+        button_aide_K2.place(x=303, y=75)
+
+
+        #   B.4.a.  Texte "Vente Call K3"
+        self.K3 = tk.Label(self.frame_bas, text="Vente CALL (k3)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K3.place(x=10, y=120) 
+        #   B.4.b.  Zone de texte K3
+        self.K3_entry = tk.Entry(self.frame_bas, width=13)
+        self.K3_entry.insert(0, "160")
+        self.K3_entry.place(x=170, y=115)
+        #   B.4.c.  Bouton aide K3
+        button_aide_K3 = tk.Button(self.frame_bas, text="?", command= self.Aide_K3)
+        button_aide_K3.place(x=303, y=115)
+
+
+        #   B.5.a.  Texte "Achat Call K4"
+        self.K4 = tk.Label(self.frame_bas, text="Achat CALL (k4)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K4.place(x=10, y=160) 
+        #   B.5.b.  Zone de texte K4
+        self.K4_entry = tk.Entry(self.frame_bas, width=13)
+        self.K4_entry.insert(0, "180")
+        self.K4_entry.place(x=170, y=155)
+        #   B.5.c.  Bouton aide K4
+        button_aide_K4 = tk.Button(self.frame_bas, text="?", command= self.Aide_K4)
+        button_aide_K4.place(x=303, y=155)
+
+
+        #   B.6.    Texte d'information sur la stratégie
+        texte = "Attention ici, il faut suivre l'ordre : K4 > K3 > K2 > K1. \nPour plus d'informations, cliquez sur les boutons d'aide"
+        self.label_texte = tk.Label(self.frame_bas, text=texte, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte.place(x=5, y=200) 
+
+
+        #   B.7.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=240)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x') 
+
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos(self):
+
+
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        strike_K1 = self.K1_entry.get()
+        strike_K2 = self.K2_entry.get()
+        strike_K3 = self.K3_entry.get()
+        strike_K4 = self.K4_entry.get()
+
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([strike_K1, strike_K2]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            strike_K1 = float(strike_K1)
+            strike_K2 = float(strike_K2)
+            strike_K3 = float(strike_K3)
+            strike_K4 = float(strike_K4)
+
+        except ValueError:
+            messagebox.showerror("Erreur", "Tous les paramètres doivent être des chiffres")
+            return
+
+        #   A.3.    Vérification de la condition de la stratégie
+        if strike_K4 > strike_K3 > strike_K2 > strike_K1 :
+
+            #   A.3.1    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la stratégie
+            self.calculate_iron_condor_spread()
+        else :
+            messagebox.showerror("Erreur", "Vous devez suivre l'odre K4 > K3 > K2 > K1.")
+            return
+
+    
+
+    #   III.    FONCTION DE CALCUL DE LA STRATÉGIE
+    def calculate_iron_condor_spread(self) :
+
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        lower_put_strike = float(self.K1_entry.get())
+        higher_put_strike = float(self.K2_entry.get())
+        lower_call_strike = float(self.K3_entry.get())
+        higher_call_strike = float(self.K4_entry.get())
+
+
+        #   B.  Reproduit la valeur de mon sous-jacent en générant 100 valeurs linéairement espacées
+        stock_prices = np.linspace(0.5 * lower_put_strike, 1.5 * higher_call_strike, 100)
+
+
+        #   C.  Position longue sur le Put (K1)
+        long_put_payoff = np.maximum(lower_put_strike - stock_prices, 0) - lower_put_strike*0.15
+
+
+        #   D.  Position courte sur le Put (K2)
+        short_put_payoff = - (np.maximum(higher_put_strike - stock_prices, 0)) + higher_put_strike*0.2
+        
+        
+        #   E.  Position courte sur le Call (K3)
+        short_call_payoff = - (np.maximum(stock_prices - lower_call_strike, 0)) + lower_call_strike*0.2
+
+
+        #   F.  Position longue sur le Call (K4)
+        long_call_payoff = np.maximum(stock_prices - higher_call_strike, 0) - higher_call_strike*0.15
+
+
+        #   G.  Payoff de la stratégie Iron Condor
+        iron_condor_payoff = long_put_payoff + short_put_payoff + short_call_payoff + long_call_payoff
+
+
+        #   H.  Mise en place du graphique
+        plt.close()
+        plt.figure(figsize=(6, 4))
+        plt.plot(stock_prices, iron_condor_payoff, color='purple', label='Iron Condor Payoff')
+        plt.plot(stock_prices, long_put_payoff, color='orange', linestyle='--', label='Position Longue Put')
+        plt.plot(stock_prices, short_put_payoff, color='red', linestyle='--', label='Position Courte Put')
+        plt.plot(stock_prices, short_call_payoff, color='green', linestyle='--', label='Position Courte Call')
+        plt.plot(stock_prices, long_call_payoff, color='blue', linestyle='--', label='Position Longue Call')
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(lower_put_strike, color='green', linestyle='--', label='Lower Put Strike')
+        plt.axvline(higher_put_strike, color='red', linestyle='--', label='Higher Put Strike')
+        plt.axvline(lower_call_strike, color='blue', linestyle='--', label='Lower Call Strike')
+        plt.axvline(higher_call_strike, color='purple', linestyle='--', label='Higher Call Strike')
+        #   J.1.    Remplissage en vert là où le payoff est positif (gagnant)
+        plt.fill_between(stock_prices, iron_condor_payoff, where=(iron_condor_payoff > 0), color='green', alpha=0.3)
+        #   J.2.    Remplissage en rouge là où le payoff est négatif (perdant)
+        plt.fill_between(stock_prices, iron_condor_payoff, where=(iron_condor_payoff < 0), color='red', alpha=0.3)
+        #   J.3.    Autres paramètres du graphique        
+        plt.legend(loc='upper left', fontsize=5.5)  #   Modifier la position et la taille de la légende
+        plt.title('Graphique de Payoff de l\'Iron Condor')
+        plt.xlabel('Prix du sous-jacent')
+        plt.ylabel('Payoff')
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+
+
+
+    #   IV. TEXTE AIDE
+    def Aide(self) :
+
+        #   A.  Texte
+        texte = """
+        IRON CONDOR :
+        -------------
+
+        Une stratégie de "Iron Condor" consiste pour un investisseur à combiner 
+        deux spreads de crédit : un "Bull Put Spread" et un "Bear Call Spread" 
+        sur le même actif sous-jacent. Cette approche est utilisée lorsque 
+        l'investisseur anticipe une faible volatilité et s'attend à ce que le 
+        prix de l'actif reste stable dans une fourchette définie. En vendant 
+        une option de vente (put) à un prix d'exercice inférieur et une option 
+        d'achat (call) à un prix d'exercice supérieur, tout en achetant une 
+        option de vente et une option d'achat à des prix d'exercice encore plus 
+        extrêmes pour limiter les risques, l'investisseur cherche à maximiser 
+        la prime perçue des options vendues.
+
+        D'autre part, le risque est également contrôlé et limité à la différence 
+        entre les prix d'exercice des options vendues et achetées, moins les 
+        primes nettes reçues. Le risque maximal survient si le prix de l'actif 
+        dépasse largement l'un des prix d'exercice extrêmes.
+
+        En résumé, le "Iron Condor" est une stratégie optimale pour les 
+        investisseurs qui prévoient une faible volatilité et un marché stable, 
+        permettant de capturer des revenus constants tout en maintenant un contrôle 
+        rigoureux sur les risques encourus.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   V.  TEXTE AIDE K1
+    def Aide_K1(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT PUT (K1) :
+        ----------------
+
+        Description: Cette position est prise en achetant une option de vente 
+        avec un prix d'exercice inférieur à celui de l'option de vente vendue. 
+        Elle sert de protection contre une baisse drastique du prix de l'actif 
+        sous-jacent.
+
+        Impact sur la stratégie: Si le prix de l'actif chute en dessous du prix 
+        d'exercice de cette option de vente, les pertes sur la position de vente 
+        courte sont limitées, car cette option de vente longue commence à générer 
+        des profits qui compensent les pertes. Cela aide à définir la perte 
+        maximale de l'Iron Condor.
+        
+
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   VI. TEXTE AIDE K2
+    def Aide_K2(self) :
+
+        #   A.  Texte
+        texte = """
+        VENTE PUT (K2) :
+        ----------------
+
+        Description: Vend une option de vente avec un prix d'exercice supérieur 
+        à celui de l'option de vente achetée. Cette position génère une prime 
+        qui contribue au profit initial.
+        
+        Impact sur la stratégie: Cette position est profitable tant que le prix 
+        de l'actif reste au-dessus du prix d'exercice de l'option vendue. Si le 
+        prix baisse en dessous de ce niveau, la position commence à générer des 
+        pertes. Cependant, ces pertes sont limitées par la position de vente 
+        longue.
+        
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   VII. TEXTE AIDE K3    
+    def Aide_K3(self) :
+
+        #   A.  Texte
+        texte = """
+        VENTE CALL (K3) :
+        -----------------
+
+        Description: Vend une option d'achat avec un prix d'exercice inférieur 
+        à celui de l'option d'achat achetée. Cette position produit une prime, 
+        augmentant le profit initial.
+        
+        Impact sur la stratégie: Cette position est bénéfique si le prix de 
+        l'actif reste en dessous du prix d'exercice de l'option vendue. Si le 
+        prix dépasse ce niveau, la position commence à perdre de l'argent, mais 
+        les pertes sont plafonnées par l'option d'achat longue.
+        
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VIII. TEXTE AIDE K4   
+    def Aide_K4(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT CALL (K4) :
+        -----------------
+
+        Description: Achète une option d'achat avec un prix d'exercice 
+        supérieur à celui de l'option d'achat vendue. Elle agit comme une 
+        protection contre une hausse excessive du prix de l'actif sous-jacent.
+        
+        Impact sur la stratégie: Si le prix de l'actif augmente au-delà du prix 
+        d'exercice de cette option d'achat, les pertes sur la position d'achat 
+        courte sont limitées, car cette option d'achat longue commence à générer 
+        des profits qui compensent ces pertes. Elle définit également la perte 
+        maximale pour l'Iron Condor dans le cas d'une hausse significative du 
+        marché.
+        
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+
+
+
+#   CLASSE --> BUTTERFLY
+class ButterflySpreadPage(tk.Frame):
+    def __init__(self, master, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.parent = master
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour")  # Utilisez 'self' pour l'ajouter à l'instance de PageApresConnexion
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  # 'tearoff=0' supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+        
+        #   B.1.  Texte "Butterfly Spread"  
+        self.label_texte1 = tk.Label(self.frame_bas, text="Butterfly Spread Strategie", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=100, y=7) 
+
+
+        #   B.2.a.  Texte "Achat Put K1"
+        self.K1= tk.Label(self.frame_bas, text="Achat PUT (k1)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K1.place(x=10, y=40) 
+        #   B.2.b.  Zone de texte K1
+        self.K1_entry = tk.Entry(self.frame_bas, width=13)
+        self.K1_entry.insert(0, "120") 
+        self.K1_entry.place(x=170, y=35)
+        #   B.2.c.  Bouton aide K1
+        button_aide_K1_entry = tk.Button(self.frame_bas, text="?", command= self.Aide_K1)
+        button_aide_K1_entry.place(x=303, y=35)
+
+        
+        #   B.3.a.  Texte "Vente Put K2"
+        self.K2 = tk.Label(self.frame_bas, text="Vente PUT (k2)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K2.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte K2
+        self.K2_entry = tk.Entry(self.frame_bas, width=13)
+        self.K2_entry.insert(0, "180")
+        self.K2_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide K2
+        button_aide_K2 = tk.Button(self.frame_bas, text="?", command= self.Aide_K2_K3)
+        button_aide_K2.place(x=303, y=75)
+
+
+        #   B.4.a.  Texte "Vente Put K3"
+        self.K3 = tk.Label(self.frame_bas, text="Vente PUT (k3)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K3.place(x=10, y=120) 
+        #   B.4.b.  Zone de texte K3
+        self.K3_entry = tk.Entry(self.frame_bas, width=13)
+        self.K3_entry.insert(0, "180")
+        self.K3_entry.place(x=170, y=115)
+        #   B.4.c.  Bouton aide K3
+        button_aide_K3 = tk.Button(self.frame_bas, text="?", command= self.Aide_K2_K3)
+        button_aide_K3.place(x=303, y=115)
+
+
+        #   B.5.a.  Texte "Achat Put K4"
+        self.K4 = tk.Label(self.frame_bas, text="Achat PUT (k4)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K4.place(x=10, y=160) 
+        #   B.5.b.  Zone de texte K4
+        self.K4_entry = tk.Entry(self.frame_bas, width=13)
+        self.K4_entry.insert(0, "250")
+        self.K4_entry.place(x=170, y=155)
+        #   B.5.c.  Bouton aide K4
+        button_aide_K4 = tk.Button(self.frame_bas, text="?", command= self.Aide_K4)
+        button_aide_K4.place(x=303, y=155)
+
+
+        #   B.6.    Texte d'information sur la stratégie
+        texte = "Attention ici, il faut suivre l'ordre : K4 > K3 = K2 > K1. \nPour plus d'informations, cliquez sur les boutons d'aide"
+        self.label_texte = tk.Label(self.frame_bas, text=texte, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte.place(x=5, y=200) 
+
+
+        #   B.7.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=240)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x') 
+
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos(self):
+
+
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        strike_K1 = self.K1_entry.get()
+        strike_K2 = self.K2_entry.get()
+        strike_K3 = self.K3_entry.get()
+        strike_K4 = self.K4_entry.get()
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([strike_K1, strike_K2]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            strike_K1 = float(strike_K1)
+            strike_K2 = float(strike_K2)
+            strike_K3 = float(strike_K3)
+            strike_K4 = float(strike_K4)
+
+        except ValueError:
+            messagebox.showerror("Erreur", "Tous les paramètres doivent être des chiffres")
+            return
+
+        #   A.3.    Vérification de la condition de la stratégie
+        if strike_K2 <= strike_K1:
+            messagebox.showerror("Erreur", "Le Strike 2 doit être superieur au Strike 1.")
+            return
+        if strike_K3 != strike_K2:
+            messagebox.showerror("Erreur", "Le Strike 3 doit être égale au Strike 2.")
+            return
+        if strike_K4 <= strike_K3:
+            messagebox.showerror("Erreur", "Le Strike 4 doit être superieur au Strike 3.")
+            return
+        else :
+            #   A.3.1    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la stratégie
+            self.calculate_butterfly_spread()
+    
+
+    
+
+    #   III.    FONCTION DE CALCUL DE LA STRATÉGIE
+    def calculate_butterfly_spread(self) :
+
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        achat_strike_1 = float(self.K1_entry.get())
+        vente_Strike_2 = float(self.K2_entry.get())
+        vente_strike_3 = float(self.K3_entry.get())
+        achat_strike_4 = float(self.K4_entry.get())
+
+
+        #   B.  Reproduit la valeur de mon sous-jacent en générant 100 valeurs linéairement espacées
+        stock_prices = np.linspace(0.5 * achat_strike_1, 1.5 * achat_strike_4, 100)
+
+
+        #   C.  Position longue sur le Put (K1)
+        long_put_payoff = np.maximum(achat_strike_1 - stock_prices, 0) - achat_strike_1*0.2
+
+
+        #   D.  Position courte sur le Put (K2)
+        short_put_payoff1 = - (np.maximum(vente_Strike_2 - stock_prices, 0)) + vente_Strike_2*0.1
+
+
+        #   E.  Position courte sur le Put (K3)
+        short_put_payoff2 = - (np.maximum(vente_strike_3 - stock_prices, 0)) + vente_strike_3*0.1
+
+
+        #   F.  Position longue sur le Call (K4)
+        long_put_payoff2 = np.maximum(achat_strike_4 - stock_prices, 0) - achat_strike_4*0.2
+
+
+        #   G.  Payoff de la stratégie Butterfly Spread
+        butterfly_spread_payoff = long_put_payoff + short_put_payoff1 + short_put_payoff2 + long_put_payoff2
+
+
+        #   H.  Mise en place du graphique
+        plt.close()
+        plt.figure(figsize=(6, 4))
+        plt.plot(stock_prices, butterfly_spread_payoff, color='purple', label='Butterfly Spread Payoff')
+        plt.plot(stock_prices, long_put_payoff, color='orange', linestyle='--', label='Achat Put (Strike inférieur)')
+        plt.plot(stock_prices, short_put_payoff1, color='red', linestyle='--', label='Vente Put (Strike intermédiaire 1)')
+        plt.plot(stock_prices, short_put_payoff2, color='green', linestyle='--', label='Vente Call (Strike intermédiaire 2)')
+        plt.plot(stock_prices, long_put_payoff2, color='blue', linestyle='--', label='Achat Put (Strike supérieur)')
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(achat_strike_1, color='green', linestyle='--', label='Achat Put (Strike inférieur)')
+        plt.axvline(vente_Strike_2, color='red', linestyle='--', label='Vente Put (Strike intermédiaire 1)')
+        plt.axvline(vente_strike_3, color='green', linestyle='--', label='Vente Call (Strike intermédiaire 2)')
+        plt.axvline(achat_strike_4, color='purple', linestyle='--', label='Achat Put (Strike supérieur)')
+        #   J.1.    Remplissage en vert là où le payoff est positif (gagnant)
+        plt.fill_between(stock_prices, butterfly_spread_payoff, where=(butterfly_spread_payoff > 0), color='green', alpha=0.3)
+        #   J.2.    Remplissage en rouge là où le payoff est négatif (perdant)
+        plt.fill_between(stock_prices, butterfly_spread_payoff, where=(butterfly_spread_payoff < 0), color='red', alpha=0.3)
+        #   J.3.    Autres paramètres du graphique        
+        plt.legend(loc='upper left', fontsize=5.5)  # Modifier la position et la taille de la légende
+        plt.title('Graphique de Payoff du Butterfly Spread')
+        plt.xlabel('Prix du sous-jacent')
+        plt.ylabel('Payoff')
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+
+
+
+
+    #   IV. TEXTE AIDE
+    def Aide(self) :
+
+        #   A.  Texte
+        texte = """
+        BUTTERFLY SPREAD :
+        ------------------
+
+        Une stratégie de "Butterfly Spread" implique pour un investisseur 
+        l'utilisation de trois prix d'exercice différents pour les options sur 
+        le même actif sous-jacent, dans le but de profiter d'une faible volatilité 
+        et d'une stabilité du prix de l'actif. Cette stratégie combine l'achat 
+        de deux options (une call ou une put) aux prix d'exercice les plus éloignés 
+        et la vente de deux options au prix d'exercice intermédiaire. 
+
+        L'intérêt de cette approche réside dans sa capacité à générer un profit 
+        lorsque le prix de l'actif est proche du prix d'exercice central des 
+        options vendues à l'échéance. La configuration du "Butterfly Spread" est 
+        telle que le coût initial (et donc la perte maximale) est limité à la 
+        différence entre les primes payées pour les options achetées et les primes 
+        reçues pour les options vendues.
+
+        Le profit maximum est atteint si le prix de l'actif à l'échéance est 
+        exactement égal au prix d'exercice des options vendues. Ce profit est la 
+        différence entre les prix d'exercice des options vendues et achetées, moins 
+        le coût net initial des options. 
+
+        En résumé, le "Butterfly Spread" est une stratégie idéale pour les 
+        investisseurs qui anticipent peu ou pas de mouvement dans le prix de l'actif 
+        et cherchent à maximiser leur profit tout en limitant strictement leurs pertes 
+        potentielles.
+        
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   V.  TEXTE AIDE K1   
+    def Aide_K1(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT PUT (K1) :
+        ----------------
+
+        Description: Cette position est prise en achetant une option de vente 
+        avec le prix d'exercice le plus bas. Elle sert de protection contre 
+        une baisse extrême du prix de l'actif sous-jacent.
+        
+        Impact sur la stratégie: Si le prix de l'actif chute bien en dessous 
+        du prix d'exercice le plus bas, cette position commence à générer des 
+        profits qui compensent les pertes des options de vente vendues au centre. 
+        Elle aide à définir la perte maximale de la stratégie Butterfly, limitée 
+        à la prime nette payée.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   VI. TEXTE AIDE K2 et K3
+    def Aide_K2_K3(self) :
+
+        #   A.  Texte
+        texte = """
+        VENTE PUT (K2 et K3):
+        ---------------------
+
+        Description: Vend deux options de vente au prix d'exercice central. 
+        Cette position est cruciale car elle génère une prime significative, 
+        contribuant au profit initial du Butterfly Spread.
+        
+        Impact sur la stratégie: Cette position est profitable tant que le 
+        prix de l'actif reste proche du prix d'exercice central. Si le prix de 
+        l'actif chute en dessous ou monte au-dessus de ce niveau, les pertes 
+        augmentent sur ces positions vendues. Ces pertes sont cependant limitées 
+        par les gains des options de vente longues aux extrêmes.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   VII. TEXTE AIDE K4   
+    def Aide_K4(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT PUT (K4) :
+        ----------------
+
+        Description: Achète une option de vente avec le prix d'exercice le 
+        plus élevé pour compléter le "papillon". Cette position agit comme 
+        une protection contre une baisse moins prononcée que prévue du prix 
+        de l'actif sous-jacent.
+        
+        Impact sur la stratégie: Si le prix de l'actif se situe juste en 
+        dessous du prix d'exercice le plus élevé à l'expiration, cette option 
+        de vente longue commence à produire des gains qui compensent les pertes 
+        sur les positions de vente courtes au centre. Elle contribue aussi à 
+        définir la perte maximale, limitée à la prime nette investie.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+    
+
+
+
+
+
+#   CLASSE --> STRADDLE
+class StraddlePage(tk.Frame):
+    def __init__(self, master, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.parent = master
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour")  # Utilisez 'self' pour l'ajouter à l'instance de PageApresConnexion
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  # 'tearoff=0' supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+
+        #   B.1.  Texte "Straddle"  
+        self.label_texte1 = tk.Label(self.frame_bas, text="Straddle Stratégie", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=120, y=7) 
+
+
+        #   B.2.a.  Texte "Achat Call K1"
+        self.K1= tk.Label(self.frame_bas, text="Achat CALL (k1)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K1.place(x=10, y=40) 
+        #   B.2.b.  Zone de texte K1
+        self.K1_entry = tk.Entry(self.frame_bas, width=13)
+        self.K1_entry.insert(0, "120") 
+        self.K1_entry.place(x=170, y=35)
+        #   B.2.c.  Bouton aide K1
+        button_aide_K1_entry = tk.Button(self.frame_bas, text="?", command= self.Aide_K1)
+        button_aide_K1_entry.place(x=303, y=35)
+
+        
+        #   B.3.a.  Texte "Achat Put K2"
+        self.K2 = tk.Label(self.frame_bas, text="Achat Put (k2)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K2.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte K2
+        self.K2_entry = tk.Entry(self.frame_bas, width=13)
+        self.K2_entry.insert(0, "120")
+        self.K2_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide K2
+        button_aide_K2 = tk.Button(self.frame_bas, text="?", command= self.Aide_K2)
+        button_aide_K2.place(x=303, y=75)
+
+
+        #   B.4.    Texte d'information sur la stratégie
+        texte = "Attention ici, le Strike du CALL (k1) = Strike du Put (k2). \nPour plus d'informations, cliquez sur les boutons d'aide"
+        self.label_texte = tk.Label(self.frame_bas, text=texte, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte.place(x=5, y=140) 
+
+
+        #   B.5.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=230)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x')
+
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos(self):
+
+
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        strike_K1 = self.K1_entry.get()
+        strike_K2 = self.K2_entry.get()
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([strike_K1, strike_K2]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+    
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            strike_K1 = float(strike_K1)
+            strike_K2 = float(strike_K2)
+        except ValueError:
+            messagebox.showerror("Erreur", "Tous les paramètres doivent être des chiffres")
+            return
+
+        #   A.3.    Vérification de la condition de la stratégie
+        if strike_K1 != strike_K2:
+            messagebox.showerror("Erreur", "Le prix de l'achat du call (k1) doit être égal au prix de l'achat du Put (k2).")
+            return
+
+        #   A.4.    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la stratégie
+        self.calculate_straddle()
+    
+
+
+    #   III.    FONCTION DE CALCUL DE LA STRATÉGIE
+    def calculate_straddle(self) :
+
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        K1_strike = float(self.K1_entry.get())
+        K2_strike = float(self.K2_entry.get())
+        
+
+
+        #   B.  Reproduit la valeur de mon sous-jacent en générant 100 valeurs linéairement espacées
+        stock_prices = np.linspace(0.5 * K1_strike, 1.5 * K1_strike, 100)
+
+
+        #   C.  Position longue sur le Call (K1)
+        call_payoff = np.maximum(stock_prices - (K1_strike + (K1_strike*0.1)), -(K1_strike*0.1))
+        
+
+        #   D.  Position longue sur le Put (K2)
+        put_payoff = np.maximum(K2_strike - (stock_prices+(K2_strike*0.1)), -(K2_strike*0.1))
+        
+
+        #   E.  Payoff total de la stratégie Straddle Spread
+        straddle_payoff = call_payoff + put_payoff
+
+
+        #   F.  Mise en place du graphique
+        plt.close()
+        plt.figure(figsize=(6, 4))
+        plt.plot(stock_prices, straddle_payoff, color='purple', label='Strangle Payoff')
+        plt.plot(stock_prices, put_payoff, color='orange', linestyle='--', label='Long Put')
+        plt.plot(stock_prices, call_payoff, color='blue', linestyle='--', label='Long Call')
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(K1_strike, color='green', linestyle='--', label='Lower Put Strike')
+        plt.axvline(K2_strike, color='red', linestyle='--', label='Higher Call Strike')
+        plt.fill_between(stock_prices, straddle_payoff, where=(straddle_payoff > 0), color='green', alpha=0.3)
+        plt.fill_between(stock_prices, straddle_payoff, where=(straddle_payoff < 0), color='red', alpha=0.3)
+        plt.legend(loc='upper left', fontsize='small')  # Modify legend position and size
+        plt.title('Strangle Payoff Graph')
+        plt.xlabel('Underlying Price')
+        plt.ylabel('Payoff')
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+
+
+
+    #   IV. TEXTE AIDE
+    def Aide(self) :
+
+        #   A.  Texte
+        texte = """
+        STRADDLE :
+        ----------
+
+        Une stratégie de "Straddle" consiste pour un investisseur à acheter 
+        simultanément une option d'achat (call) et une option de vente (put) 
+        sur le même actif sous-jacent, avec le même prix d'exercice et la 
+        même date d'expiration. Cette approche est privilégiée lorsque 
+        l'investisseur anticipe une forte volatilité du prix de l'actif mais 
+        ne peut prédire la direction de ce mouvement, que ce soit à la hausse 
+        ou à la baisse.
+
+        Le potentiel de gain de cette stratégie est théoriquement illimité 
+        pour l'option d'achat si le prix de l'actif augmente significativement, 
+        et substantiel pour l'option de vente si le prix de l'actif chute 
+        drastiquement. Le profit est réalisé dès que le mouvement du prix de 
+        l'actif compense la somme des primes payées pour les deux options.
+
+        En résumé, le "Straddle" est une stratégie optimale pour les 
+        investisseurs qui s'attendent à des mouvements importants du prix de 
+        l'actif, offrant la possibilité de capturer des profits dans des 
+        conditions de marché hautement volatiles, tout en limitant les pertes 
+        au montant initial investi dans les primes des options.
+                
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   V.  TEXTE AIDE K1
+    def Aide_K1(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT CALL (K1) :
+        -----------------
+
+        Description: Parallèlement à l'option de vente, l'achat d'une option 
+        d'achat avec le même prix d'exercice permet de couvrir la possibilité 
+        d'une hausse imprévue du prix de l'actif. Cela crée une position 
+        équilibrée qui profite de la volatilité.
+        
+        Impact sur la stratégie: Cette option d'achat longue offre un potentiel 
+        de gain illimité si le prix de l'actif monte fortement. Plus le prix de 
+        l'actif augmente au-delà du prix d'exercice, plus le profit augmente. 
+        Le profit est réalisé lorsque la hausse du prix de l'actif compense 
+        suffisamment la prime payée pour l'option.
+    
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+    #   VI. TEXTE AIDE K2
+    def Aide_K2(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT PUT (K2) :
+        ----------------
+
+        Description: Cette position est l'achat d'une option de vente avec un 
+        prix d'exercice proche du prix actuel du marché de l'actif sous-jacent. 
+        Elle représente l'attente d'une baisse significative du prix de l'actif.
+        
+        Impact sur la stratégie: Cette option de vente longue offre un potentiel 
+        de gain illimité si le prix de l'actif chute fortement. Plus le prix de 
+        l'actif baisse au-delà du prix d'exercice, plus le profit augmente. Le 
+        profit est réalisé lorsque la baisse du prix de l'actif compense 
+        suffisamment la prime payée pour l'option.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+
+
+#   CLASSE --> STRANGLE
+class StranglePage(tk.Frame):
+    def __init__(self, master, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.parent = master
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour")  # Utilisez 'self' pour l'ajouter à l'instance de PageApresConnexion
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  # 'tearoff=0' supprime l'option détachable du menu
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+        
+
+        #   B.1.  Texte "Strangle"  
+        self.label_texte1 = tk.Label(self.frame_bas, text="Strangle Stratégie", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=120, y=7) 
+
+
+        #   B.2.a.  Texte "Achat Call K1"
+        self.K1= tk.Label(self.frame_bas, text="Achat CALL (k1)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K1.place(x=10, y=40) 
+        #   B.2.b.  Zone de texte K1
+        self.K1_entry = tk.Entry(self.frame_bas, width=13)
+        self.K1_entry.insert(0, "140") 
+        self.K1_entry.place(x=170, y=35)
+        #   B.2.c.  Bouton aide K1
+        button_aide_K1_entry = tk.Button(self.frame_bas, text="?", command= self.Aide_K1)
+        button_aide_K1_entry.place(x=303, y=35)
+
+        
+        #   B.3.a.  Texte "Achat Call K2"
+        self.K2 = tk.Label(self.frame_bas, text="Achat Put (k2)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.K2.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte K2
+        self.K2_entry = tk.Entry(self.frame_bas, width=13)
+        self.K2_entry.insert(0, "120")
+        self.K2_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide K2
+        button_aide_K2 = tk.Button(self.frame_bas, text="?", command= self.Aide_K2)
+        button_aide_K2.place(x=303, y=75)
+
+
+        #   B.4.    Texte d'information sur la stratégie
+        texte = "Attention ici, le Strike du CALL (k1) > Strike du Put (k2). \nPour plus d'informations, cliquez sur les boutons d'aide"
+        self.label_texte = tk.Label(self.frame_bas, text=texte, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte.place(x=5, y=140) 
+
+
+        #   B.5.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos)
+        self.valider_btn.place(x=140, y=230)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x')  
+
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+    
+
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos(self):
+
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        strike_K1 = self.K1_entry.get()
+        strike_K2 = self.K2_entry.get()
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([strike_K1, strike_K2]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            strike_K1 = float(strike_K1)
+            strike_K2 = float(strike_K2)
+        except ValueError:
+            messagebox.showerror("Erreur", "Tous les paramètres doivent être des chiffres")
+            return
+
+        #   A.3.    Vérification de la condition de la stratégie
+        if strike_K1 <= strike_K2:
+            messagebox.showerror("Erreur", "Le prix de la vente call (k2) doit être superieur au à l'achat call (k1).")
+            return
+
+        #   A.4.    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la stratégie
+        self.calculate_strangle()
+    
+
+
+    #   III.    FONCTION DE CALCUL DE LA STRATÉGIE
+    def calculate_strangle(self) :
+
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        higher_call_strike = float(self.K1_entry.get())
+        lower_put_strike = float(self.K2_entry.get())
+
+
+        #   B.  Reproduit la valeur de mon sous-jacent en générant 100 valeurs linéairement espacées
+        stock_prices = np.linspace(0.5 * lower_put_strike, 1.5 * higher_call_strike, 100)
+
+
+        #   C.  Position longue sur le Call (K1)
+        long_call_payoff = np.maximum(stock_prices - higher_call_strike, 0) - higher_call_strike*0.1
+
+
+        #   D.  Position longue sur le Put (K2)
+        long_put_payoff = np.maximum(lower_put_strike - stock_prices, 0) - lower_put_strike*0.15
+
+
+        #   E.  Payoff total de la stratégie Strangle
+        strangle_payoff = long_put_payoff + long_call_payoff
+
+
+        #   F.  Mise en place du graphique
+        plt.close()
+        plt.figure(figsize=(6, 4))
+        plt.plot(stock_prices, strangle_payoff, color='purple', label='Strangle Payoff')
+        plt.plot(stock_prices, long_put_payoff, color='orange', linestyle='--', label='Long Put')
+        plt.plot(stock_prices, long_call_payoff, color='blue', linestyle='--', label='Long Call')
+        plt.axhline(0, color='grey', lw=0.5)
+        plt.axvline(lower_put_strike, color='green', linestyle='--', label='Lower Put Strike')
+        plt.axvline(higher_call_strike, color='red', linestyle='--', label='Higher Call Strike')
+        plt.fill_between(stock_prices, strangle_payoff, where=(strangle_payoff > 0), color='green', alpha=0.3)
+        plt.fill_between(stock_prices, strangle_payoff, where=(strangle_payoff < 0), color='red', alpha=0.3)
+        plt.legend(loc='upper left', fontsize='small')  # Modify legend position and size
+        plt.title('Strangle Payoff Graph')
+        plt.xlabel('Underlying Price')
+        plt.ylabel('Payoff')
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+
+
+
+
+    #   IV. TEXTE AIDE
+    def Aide(self) :
+
+        #   A.  Texte       
+        texte = """
+        STRANGLE :
+        ----------
+
+        Une stratégie de "Strangle" consiste pour un investisseur à acheter 
+        simultanément une option d'achat (call) et une option de vente (put) 
+        sur le même actif sous-jacent, mais avec des prix d'exercice différents. 
+        Habituellement, le prix d'exercice de l'option d'achat est supérieur 
+        à celui de l'option de vente. Cette méthode est privilégiée lorsque 
+        l'investisseur anticipe une forte volatilité du prix de l'actif mais 
+        n'est pas certain de la direction du mouvement.
+
+        Le "Strangle" offre une flexibilité plus grande qu'un "Straddle" car 
+        il permet à l'investisseur de positionner les prix d'exercice loin du 
+        prix actuel du marché, réduisant ainsi le coût initial lié à l'achat 
+        des options. Cependant, cela signifie aussi que l'actif doit connaître 
+        un mouvement plus important pour que la stratégie devienne rentable.
+
+        Le potentiel de gain de cette stratégie est illimité pour l'option 
+        d'achat si le prix de l'actif augmente significativement, et important 
+        pour l'option de vente si le prix de l'actif chute fortement. Le profit 
+        est réalisé lorsque le mouvement du prix de l'actif est suffisamment 
+        grand pour couvrir les coûts des primes payées pour les deux options.
+
+        La perte maximale est limitée au coût total des primes versées pour 
+        les options achetées. Si le prix de l'actif reste entre les deux prix 
+        d'exercice, sans mouvement significatif, les deux options peuvent expirer 
+        sans valeur, entraînant la perte de l'investissement initial dans les 
+        primes.
+
+        En résumé, le "Strangle" est une stratégie optimale pour les 
+        investisseurs qui s'attendent à des changements importants dans le prix 
+        de l'actif, offrant un potentiel de gain élevé dans des conditions de marché 
+        hautement volatiles, tout en conservant un contrôle sur les coûts grâce à 
+        des primes initialement plus basses.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   V.  TEXTE AIDE K1
+    def Aide_K1(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT CALL (K1) :
+        -----------------
+
+        Description: Cette position est l'achat d'une option d'achat avec 
+        un prix d'exercice supérieur au prix actuel du marché de l'actif 
+        sous-jacent. Elle est prévue pour profiter d'une hausse inattendue 
+        du prix de l'actif.
+        
+        Impact sur la stratégie: Ce call long offre un potentiel de gain 
+        illimité si le prix de l'actif augmente fortement. Le profit 
+        augmente à mesure que le prix de l'actif monte au-dessus du prix 
+        d'exercice de l'option. Le gain est réalisé quand la hausse du prix 
+        de l'actif compense suffisamment la prime payée pour cette option.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VI. TEXTE AIDE K2
+    def Aide_K2(self) :
+
+        #   A.  Texte
+        texte = """
+        ACHAT PUT (K2) :
+        ----------------
+
+        Description: Cette position est l'achat d'une option de vente avec 
+        un prix d'exercice inférieur au prix actuel du marché de l'actif 
+        sous-jacent. Elle est conçue pour capitaliser sur une baisse 
+        significative du prix de l'actif.
+        
+        Impact sur la stratégie: Ce put long offre un potentiel de gain 
+        important si le prix de l'actif chute fortement. Le profit augmente 
+        à mesure que le prix de l'actif descend en dessous du prix d'exercice 
+        de l'option. Le gain est réalisé quand la baisse du prix de l'actif 
+        compense suffisamment la prime payée pour cette option.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    #   CLASSE --> OPTION À BARRIÈRE
+class BarrierOptionsPage(ttk.Frame):
+    def __init__(self, master, barriere_type, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.master = master
+        self.barriere_type = barriere_type
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.show_barriere_simulation()   
+
+
+
+
+    #   I.  Fonction pour nettoyer la page
+    def clear_frame(self):
+        for widget in self.winfo_children():
+            widget.destroy()
+
+
+
+
+    #   II. Appel de la classe de la logique de calcul
+    def show_barriere_simulation(self):
+        self.clear_frame()
+        Barriere_simulation = BarriereSimulationPage(self, self.barriere_type, self.vanille_callback, self.retour_callback)
+        Barriere_simulation.pack(fill='both', expand=True)
+
+
+
+
+
+
+    #   CLASSE DE LA LOGIQUE DE CALCUL DES OPTIONS À BARRIÈRE
+class BarriereSimulationPage(tk.Frame):
+    def __init__(self, master, barriere_type, vanille_callback, menu_callback):
+        super().__init__(master)
+        self.vanille_callback = vanille_callback
+        self.retour_callback = menu_callback
+        self.barriere_type = barriere_type
+        self.simulation_window = None
+        self.create_widgets()
+
+
+    #   I.  FONCTION MISE EN PAGE
+    def create_widgets(self):
+
+
+        #   A.  Bloc du haut "Frame" (pour placer les éléments harmonieusement en haut)
+        self.frame_haut = tk.Frame(self, height=100) 
+        self.frame_haut.pack(side='top', fill='x') 
+        
+        #   A.1.    Menu déroulant (Bloc du haut)
+        retourBtn = Menubutton(self.frame_haut, text="Retour") 
+        retourBtn.menu = Menu(retourBtn, tearoff=0)  
+        retourBtn["menu"] = retourBtn.menu
+        
+        v1 = IntVar()
+        v2 = IntVar()
+        
+        retourBtn.menu.add_checkbutton(label="Page précédente", variable=v1, command=self.vanille_callback)
+        retourBtn.menu.add_checkbutton(label="Menu Principal", variable=v2, command=self.retour_callback)
+
+
+        #   A.2.    Mise en place du bouton --> en haut à droite du Bloc du haut
+        retourBtn.pack(side="left", padx=10, pady=10)
+
+
+
+        #   B.  Bloc du bas "Frame" (pour placer les éléments harmonieusement en bas)
+        self.frame_bas = tk.Frame(self, width=350, height=280, bg='#3a3a3a')
+        self.frame_bas.place(relx=0.5, rely=0.5, anchor=tk.CENTER)
+
+
+        #   B.1.  Titre selon la barrière
+        self.label_texte1 = tk.Label(self.frame_bas, text=self.barriere_type, bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.label_texte1.place(x=130, y=7) 
+        
+
+        #   B.2.a.    Texte Barriere
+        self.barriere= tk.Label(self.frame_bas, text="Barrière (en %)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.barriere.place(x=10, y=40) 
+        #   B.2.b.    Zone de l'échelle
+        if self.barriere_type == "Up and In" or self.barriere_type == "Up and Out":
+            valeur = IntVar() 
+            self.barriere_scale = tk.Scale(self.frame_bas, variable = valeur, from_ = 101, to = 200, orient = "horizontal", length=125)
+        else :
+            valeur = IntVar() 
+            self.barriere_scale = tk.Scale(self.frame_bas, variable = valeur, from_ = 1, to = 99, orient = "horizontal", length=125)
+        self.barriere_scale.place(x=170, y=30)
+        #   B.2.c    Bouton aide barriere
+        button_aide_barriere = tk.Button(self.frame_bas, text="?", command= self.Aide_barriere)
+        button_aide_barriere.place(x=303, y=35)
+
+
+        #   B.3.a.  Texte Maturite
+        self.maturite = tk.Label(self.frame_bas, text="Maturité (en années)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.maturite.place(x=10, y=80) 
+        #   B.3.b.  Zone de texte Maturite
+        self.maturite_entry = tk.Entry(self.frame_bas, width=13)
+        self.maturite_entry.insert(0, "2")
+        self.maturite_entry.place(x=170, y=75)
+        #   B.3.c.  Bouton aide Maturite
+        button_aide_maturite = tk.Button(self.frame_bas, text="?", command= self.Aide_maturite)
+        button_aide_maturite.place(x=303, y=75)
+
+
+        #   B.4.a.  Texte Volatilite
+        self.volatilite = tk.Label(self.frame_bas, text="Volatilite (en %)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.volatilite.place(x=10, y=120) 
+        #   B.4.b.  Zone de texte Volatilite
+        self.volatilite_entry = tk.Entry(self.frame_bas, width=13)
+        self.volatilite_entry.insert(0, "20")
+        self.volatilite_entry.place(x=170, y=115)
+        #   B.4.c.  Bouton aide Volatilite
+        button_aide_volatilite = tk.Button(self.frame_bas, text="?", command= self.Aide_volatilite)
+        button_aide_volatilite.place(x=303, y=115)
+
+
+        #   B.5.a.  Texte Taux sans risque
+        self.taux = tk.Label(self.frame_bas, text="Taux sans risque (en %)", bg='#3a3a3a', fg='white',font=("Verdana", 12))
+        self.taux.place(x=10, y=160) 
+        #   B.5.b.  Zone de texte Taux sans risque
+        self.taux_entry = tk.Entry(self.frame_bas, width=13)
+        self.taux_entry.insert(0, "5")
+        self.taux_entry.place(x=170, y=155)
+        #   B.5.c.  Bouton aide Taux sans risque
+        button_aide_taux = tk.Button(self.frame_bas, text="?", command= self.Aide_taux)
+        button_aide_taux.place(x=303, y=155)
+
+
+        #   B.6.    Bouton Valider
+        self.valider_btn = tk.Button(self.frame_bas, text="Valider", command=self.recuperer_infos_barriere)
+        self.valider_btn.place(x=140, y=230)
+
+
+
+        #   C.  Bloc tout en bas "Frame" (pour placer les éléments harmonieusement tout en bas)
+        self.frame_bottom = tk.Frame(self, height=100) 
+        self.frame_bottom.pack(side='bottom', fill='x')  
+        
+
+        #   C.1.    Bouton d'aide (?) en bas à gauche
+        button_aide2 = tk.Button(self.frame_bottom, text="?", command= self.Aide)
+        button_aide2.pack(side="left", padx=10, pady=10)
+        
+
+        #   C.2.    Bouton Fermer en bas à droite
+        button_aide2 = tk.Button(self.frame_bottom, text="Fermer", command= self.quit)
+        button_aide2.pack(side = "right")
+
+        self.result_var = tk.StringVar()
+        ttk.Label(self, textvariable=self.result_var).pack()
+
+
+    #   II.   FONCTION POUR RÉCUPÉRER LES INFORMATIONS DES ZONES DE TEXTE
+    def recuperer_infos_barriere(self):
+
+
+        #   A.  RÉCUPÉRATION DES INFORMATIONS DANS LES ZONES DE TEXTE
+        barriere = self.barriere_scale.get()
+        maturite = self.maturite_entry.get()
+        volatilite = self.volatilite_entry.get()
+        taux = self.taux_entry.get()
+
+        #   A.1.    Vérification que toutes les cases sont remplies
+        if not all([barriere, maturite, volatilite, taux]):
+            messagebox.showerror("Erreur", "Toutes les cases doivent être remplies")
+            return
+
+        #   A.2.    Vérification que toutes les valeurs sont des chiffres
+        try:
+            maturite = float(maturite)
+            volatilite = float(volatilite)
+            taux = float(taux)
+
+        except ValueError:
+            messagebox.showerror("Erreur", "La maturite, la volatilite et le taux doivent être des chiffres")
+            return
+        
+        #   A.3.    Si toutes les conditions sont remplies, ont lance la fonction de calcul de la barrière
+        self.launch_simulation()
+
+
+
+    #   III.    FONCTION DE CALCUL DE LA BARRIÈRE
+    def launch_simulation(self):
+
+        #   A.  Récupération des valeurs dans les zones de texte
+        K = 100                                             #   Prix d'exercice
+        T = float(self.maturite_entry.get())                #   Maturité
+        r = float(self.taux_entry.get())/100                #   Taux sans risque
+        sigma = float(self.volatilite_entry.get())/100      #   Volatilité
+        B = float(self.barriere_scale.get())                #   Barrière
+        steps = 50
+        M = 1000
+        
+        
+        #   B.  Plage de prix initiaux S0 à visualiser
+        S0_range_percentage = 0.1  # 10% de la valeur de la barrière
+        S0_min = B - (B * S0_range_percentage)
+        S0_max = B + (B * S0_range_percentage)
+        S0_values = np.linspace(S0_min, S0_max, 100)
+
+        option_prices = []
+
+        #   C.  Calcul du prix de l'option en utilisant la simulation de Monte Carlo
+        for S0 in S0_values:
+            
+            dt = T / steps
+            payoff_sum = 0.0
+            
+            for _ in range(M):
+                S = S0
+                in_the_money = False
+                
+                for _ in range(steps):
+                    S += r * S * dt + sigma * S * np.sqrt(dt) * np.random.normal()
+                    
+                    if self.barriere_type == 'Down and Out' and S <= B:
+                        payoff_sum += max(K - S, 0)
+                        nom_barriere = 'Down and Out'
+                        break
+                    elif self.barriere_type == 'Down and In' and S <= B:
+                        payoff_sum += max(K - S, 0)
+                        nom_barriere = 'Down and In'
+                        break
+                    elif self.barriere_type == 'Up and In' and S >= B:
+                        payoff_sum += max(S - K, 0)
+                        nom_barriere = 'Up and In'
+                        break
+                    elif self.barriere_type == 'Up and Out' and S >= B:
+                        payoff_sum += max(S - K, 0)
+                        nom_barriere = 'Up and Out'
+                        break
+        
+            
+            option_price =  np.exp(-r * T) * (payoff_sum / M)
+            option_prices.append(option_price)
+        
+        
+
+
+        #   D.  Tracer le graphique
+        plt.close()
+        plt.figure(figsize=(10, 6))
+        plt.plot(S0_values, option_prices, '-o', label='Prix de l\'option à barrière')
+        plt.axhline(y=0, color='grey', lw=1)
+        plt.axvline(x=B, color='red', linestyle='--', label='Barrière')
+        plt.title(f"Prix d'une option à barrière {nom_barriere} en fonction de S0")
+        plt.xlabel('Prix initial de l\'actif S0')
+        plt.ylabel('Prix de l\'option')
+        plt.legend()
+        plt.grid(True)
+        plt.get_current_fig_manager().window.wm_geometry("+{}+{}".format(400, 0))  # Définir les coordonnées x et y pour le placement du graphique
+        plt.show()
+
+        
+
+    
+    
+
+
+    #   V.  TEXTE AIDE
+    def Aide(self) :
+        
+        #   A.  Texte
+
+        #   A.1.    Si la Barrière est Up and IN 
+        if self.barriere_type == 'Up and In':
+            texte = """
+            UP AND IN (Montante et Activante):
+            ----------------------------------
+            
+            Description: Ce type d'option devient active seulement si 
+            le prix de l'actif sous-jacent monte et atteint ou dépasse 
+            une barrière spécifiée qui est au-dessus du prix initial du 
+            sous-jacent. Avant que la barrière ne soit atteinte, l'option 
+            n'existe pas de façon effective pour l'investisseur.
+            
+            Impact: Ces options sont utilisées quand un investisseur 
+            pense que le prix de l'actif augmentera considérablement et 
+            souhaite réduire le coût initial de l'option. Si la barrière 
+            n'est jamais atteinte, l'option expire sans valeur, ce qui 
+            limite la perte à la prime payée.
+            
+
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+
+        elif self.barriere_type == 'Down and In':
+            texte = """
+            DOWN AND IN (Descendante et Activante):
+            ---------------------------------------
+            
+            Description: Cette option devient active seulement si le 
+            prix de l'actif sous-jacent descend et atteint ou passe 
+            en dessous d'une barrière spécifiée qui est en dessous du 
+            prix initial du sous-jacent. Elle ne devient une option 
+            traditionnelle que lorsque cette condition est remplie.
+            
+            Impact: Ces options conviennent aux investisseurs qui 
+            anticipent une baisse significative du prix de l'actif et 
+            veulent profiter de cette baisse à un coût réduit. Si la 
+            barrière n'est pas franchie, l'option ne s'active pas et 
+            la prime initiale est perdue.
+            
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+
+        elif self.barriere_type == 'Up and Out':
+            texte = """
+            UP AND OUT (Montante et Désactivante):
+            --------------------------------------
+            
+            Description: Ce type d'option est initialement active, 
+            mais elle cesse d'exister (expire immédiatement) si le 
+            prix de l'actif monte et atteint ou dépasse la barrière 
+            définie au-dessus du prix initial du sous-jacent.
+            
+            Impact: Utilisée par les investisseurs qui croient que 
+            l'actif ne dépassera pas un certain niveau, cette option permet 
+            de limiter les pertes en cas de mouvement imprévu à la hausse. 
+            Si la barrière est atteinte, l'option expire sans valeur, 
+            protégeant contre les hausses excessives du prix.
+            
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+
+        elif self.barriere_type == 'Down and Out':
+            texte = """
+            DOWN AND OUT (Descendante et Désactivante) :
+            --------------------------------------------
+            
+            Description: Cette option cesse d'être active si le prix 
+            de l'actif descend et atteint ou passe en dessous d'une 
+            barrière située en dessous du prix initial du sous-jacent.
+            
+            Impact: Parfait pour les investisseurs qui estiment que 
+            l'actif ne chutera pas en dessous d'un certain seuil, cette 
+            option minimise les risques en cas de chute abrupte. Si la 
+            barrière est franchie, l'option expire immédiatement sans 
+            valeur.
+            
+            BONNE UTILISATION DE L'INTERFACE :)
+            """
+
+
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+    #   VI.  TEXTE AIDE BARRIÈRE
+    def Aide_barriere(self) :
+
+
+        #   A.  Texte
+        texte = """
+        NIVEAU DE LA BARRIÈRE :
+        -----------------------
+
+        Description: Le niveau de la barrière est le seuil auquel l'option 
+        à barrière s'active ou se désactive. Il est crucial dans la 
+        détermination de la probabilité que l'option devienne active ou 
+        expire sans valeur.
+        
+        Impact: Plus la barrière est proche du prix actuel du sous-jacent, 
+        plus la probabilité que cette barrière soit atteinte est grande, et 
+        donc plus le prix de l'option à barrière sera élevé pour les options 
+        "In" ou plus bas pour les options "Out". Inversement, si la barrière 
+        est éloignée, le prix de l'option "In" baisse car elle est moins susceptible 
+        d'être activée, tandis que celui de l'option "Out" augmente.
+        
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VI.  TEXTE AIDE MATURITÉ
+    def Aide_maturite(self) :
+
+        #   A.  Texte
+        texte = """
+        MATURITÉ :
+        ----------
+
+        Description: La maturité ou la durée de vie de l'option est la 
+        période pendant laquelle l'option reste active avant son expiration.
+        
+        Impact: Pour les options à barrière, une maturité plus longue augmente 
+        les chances que la barrière soit atteinte, affectant ainsi le prix de 
+        l'option. Pour les options "In", une maturité plus longue peut augmenter 
+        leur valeur car il y a plus de temps pour que la barrière soit franchie. 
+        Pour les options "Out", une maturité prolongée peut diminuer leur valeur 
+        en raison du risque accru que la barrière soit atteinte et que l'option 
+        expire prématurément.
+        
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VII.  TEXTE AIDE VOLATILITÉ
+    def Aide_volatilite(self) :
+
+        #   A.  Texte
+        texte = """
+        VOLATILITÉ :
+        ------------
+
+        Description: La volatilité est une mesure de l'ampleur des fluctuations 
+        du prix du sous-jacent. Elle est essentielle pour évaluer l'incertitude 
+        ou le risque associé au prix de l'actif.
+        
+        Impact: Une volatilité plus élevée augmente la probabilité que le prix 
+        du sous-jacent atteigne la barrière. Pour les options "In", une volatilité 
+        accrue peut augmenter leur prix, car la chance que l'option s'active est 
+        plus grande. Pour les options "Out", une volatilité plus élevée signifie 
+        un risque plus grand que l'option cesse d'exister, diminuant ainsi leur prix.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+
+
+
+    #   VIII.  TEXTE AIDE TAUX
+    def Aide_taux(self) :
+
+        #   A.  Texte
+        texte = """
+        TAUX SANS RISQUE :
+        ------------------
+
+        Description: Le taux sans risque est souvent représenté par le taux des 
+        obligations d'État ou d'autres instruments financiers considérés comme 
+        sans risque. Il influence le coût d'opportunité de détenir une option par 
+        rapport à un investissement sans risque.
+        
+        Impact: Une augmentation du taux sans risque peut rendre les options 
+        plus coûteuses en général car le coût d'opportunité des gains potentiels 
+        augmente. Pour les options à barrière, un taux sans risque plus élevé peut 
+        légèrement augmenter le prix des options "In" car il augmente la valeur 
+        actualisée des paiements futurs potentiels. Pour les options "Out", l'effet 
+        peut être plus modéré, mais en règle générale, une hausse du taux sans risque 
+        peut augmenter leur valeur en reflétant un coût d'opportunité accru.
+
+        
+        BONNE UTILISATION DE L'INTERFACE :)
+        """
+        
+        #   B.  Appel de la Fonction "Texte_aide"
+        Texte_aide(self, texte)
+    
+
+
+
+
+
+
+if __name__ == "__main__":
+    app = Root()
+    app.mainloop()
